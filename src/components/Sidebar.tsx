@@ -1,65 +1,142 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { DocFolder } from "@/types";
+import { useCallback, useEffect, useState } from "react";
 import type { ActiveView } from "@/app/page";
+import type { ActiveKBFolder } from "@/components/KnowledgeBaseView";
+
+interface KBArea {
+  id: string;
+  name: string;
+}
+
+interface KBFolder {
+  id: string;
+  areaId: string;
+  areaName: string;
+  name: string;
+  entry_count: number;
+}
 
 interface Props {
   activeView: ActiveView;
   setActiveView: (v: ActiveView) => void;
-  activeFolder: { folderId: string; department: string } | null;
-  setActiveFolder: (f: { folderId: string; department: string } | null) => void;
+  activeKBFolder: ActiveKBFolder | null;
+  setActiveKBFolder: (f: ActiveKBFolder | null) => void;
   unansweredCount?: number;
 }
-
-const DEPARTMENTS = ["Investor Relations", "Operations", "Client Success"];
 
 export default function Sidebar({
   activeView,
   setActiveView,
-  activeFolder,
-  setActiveFolder,
+  activeKBFolder,
+  setActiveKBFolder,
   unansweredCount = 4,
 }: Props) {
-  const [folders, setFolders] = useState<DocFolder[]>([]);
+  const [areas, setAreas] = useState<KBArea[]>([]);
+  const [folders, setFolders] = useState<KBFolder[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
-    "Investor Relations": true,
+    "investor-relations": true,
   });
-  const [newFolderDept, setNewFolderDept] = useState<string | null>(null);
+
+  // Inline create states
+  const [newAreaName, setNewAreaName] = useState("");
+  const [showNewArea, setShowNewArea] = useState(false);
+  const [newFolderAreaId, setNewFolderAreaId] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
 
-  const fetchFolders = async () => {
-    const res = await fetch("/api/documents?type=folders");
+  const fetchAreas = useCallback(async () => {
+    const res = await fetch("/api/kb/areas");
     const json = await res.json();
-    if (json.data) setFolders(json.data);
-  };
-
-  useEffect(() => {
-    fetchFolders();
+    if (json.data) setAreas(json.data);
   }, []);
 
-  const toggleDept = (dept: string) =>
-    setExpanded((prev) => ({ ...prev, [dept]: !prev[dept] }));
+  const fetchFolders = useCallback(async () => {
+    const res = await fetch("/api/kb/folders");
+    const json = await res.json();
+    if (json.data) setFolders(json.data);
+  }, []);
 
-  const handleAddFolder = async (dept: string) => {
-    if (!newFolderName.trim()) return;
-    await fetch("/api/documents?type=folder", {
+  useEffect(() => {
+    fetchAreas();
+    fetchFolders();
+  }, [fetchAreas, fetchFolders]);
+
+  // ── Area management ────────────────────────────────────────────────────────
+
+  const handleAddArea = async () => {
+    if (!newAreaName.trim()) return;
+    const res = await fetch("/api/kb/areas", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newFolderName.trim(), department: dept }),
+      body: JSON.stringify({ name: newAreaName.trim() }),
     });
-    setNewFolderDept(null);
-    setNewFolderName("");
-    fetchFolders();
+    const json = await res.json();
+    if (json.data) {
+      setAreas((prev) => [...prev, json.data]);
+      setExpanded((prev) => ({ ...prev, [json.data.id]: true }));
+    }
+    setNewAreaName("");
+    setShowNewArea(false);
   };
 
-  const foldersByDept = (dept: string) =>
-    folders.filter((f) => f.department === dept);
+  const handleDeleteArea = async (id: string) => {
+    await fetch("/api/kb/areas", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setAreas((prev) => prev.filter((a) => a.id !== id));
+    setFolders((prev) => prev.filter((f) => f.areaId !== id));
+    if (activeKBFolder?.areaId === id) setActiveKBFolder(null);
+  };
+
+  // ── Folder management ──────────────────────────────────────────────────────
+
+  const handleAddFolder = async (area: KBArea) => {
+    if (!newFolderName.trim()) return;
+    const res = await fetch("/api/kb/folders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newFolderName.trim(), areaId: area.id, areaName: area.name }),
+    });
+    const json = await res.json();
+    if (json.data) setFolders((prev) => [...prev, json.data]);
+    setNewFolderAreaId(null);
+    setNewFolderName("");
+  };
+
+  const handleDeleteFolder = async (folderId: string) => {
+    await fetch("/api/kb/folders", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: folderId }),
+    });
+    setFolders((prev) => prev.filter((f) => f.id !== folderId));
+    if (activeKBFolder?.folderId === folderId) setActiveKBFolder(null);
+  };
+
+  const foldersByArea = (areaId: string) =>
+    folders.filter((f) => f.areaId === areaId);
+
+  const toggleArea = (id: string) =>
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
   const nav = (v: ActiveView) => {
     setActiveView(v);
-    setActiveFolder(null);
+    setActiveKBFolder(null);
   };
+
+  const openFolder = (folder: KBFolder, area: KBArea) => {
+    setActiveKBFolder({
+      folderId: folder.id,
+      folderName: folder.name,
+      areaId: area.id,
+      areaName: area.name,
+    });
+    setActiveView("knowledge-base");
+  };
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <aside className="w-64 flex-shrink-0 bg-hub-sidebar flex flex-col h-screen">
@@ -128,91 +205,146 @@ export default function Sidebar({
         />
       </nav>
 
-      {/* Departments */}
+      {/* Knowledge Base section */}
       <div className="px-3 mt-6 flex-1 overflow-y-auto">
-        <p className="text-hub-sidebar-muted text-[10px] font-semibold tracking-widest px-2 mb-2 uppercase">
-          Knowledge Base
-        </p>
+        <div className="flex items-center justify-between px-2 mb-2">
+          <p className="text-hub-sidebar-muted text-[10px] font-semibold tracking-widest uppercase">
+            Knowledge Base
+          </p>
+          <button
+            onClick={() => setShowNewArea(true)}
+            title="New Area"
+            className="p-0.5 rounded text-hub-sidebar-muted hover:text-hub-accent transition-colors"
+          >
+            <PlusIcon />
+          </button>
+        </div>
 
-        {DEPARTMENTS.map((dept) => (
-          <div key={dept} className="mb-1">
-            <button
-              onClick={() => toggleDept(dept)}
-              className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-hub-sidebar-text hover:bg-hub-sidebar-hover transition-colors text-sm"
-            >
-              <span
-                className="text-hub-sidebar-muted text-[10px] transition-transform duration-150"
-                style={{
-                  display: "inline-block",
-                  transform: expanded[dept] ? "rotate(90deg)" : "rotate(0deg)",
-                }}
-              >
-                ▶
-              </span>
-              <BuildingIconSm />
-              <span className="flex-1 text-left font-medium text-hub-sidebar-text/80 text-sm">
-                {dept}
-              </span>
-            </button>
+        {/* Areas list */}
+        {areas.map((area) => {
+          const isExpanded = !!expanded[area.id];
+          const areaFolders = foldersByArea(area.id);
+          const hasActiveFolder = activeKBFolder?.areaId === area.id;
 
-            {expanded[dept] && (
-              <div className="ml-4 mt-0.5 space-y-0.5">
-                {foldersByDept(dept).map((folder) => {
-                  const isActive = activeFolder?.folderId === folder.id;
-                  return (
-                    <button
-                      key={folder.id}
-                      onClick={() => {
-                        setActiveFolder({ folderId: folder.id, department: dept });
-                        setActiveView("documents");
-                      }}
-                      className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                        isActive
-                          ? "bg-hub-sidebar-hover text-hub-sidebar-text"
-                          : "text-hub-sidebar-muted hover:bg-hub-sidebar-hover hover:text-hub-sidebar-text"
-                      }`}
-                    >
-                      <FolderIcon />
-                      <span className="flex-1 text-left text-xs">{folder.name}</span>
-                      {folder.document_count > 0 && (
-                        <span className="text-[10px] bg-black/30 text-hub-sidebar-muted rounded px-1.5 py-0.5">
-                          {folder.document_count}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-
-                {newFolderDept === dept ? (
-                  <div className="px-3 py-1">
-                    <input
-                      autoFocus
-                      value={newFolderName}
-                      onChange={(e) => setNewFolderName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleAddFolder(dept);
-                        if (e.key === "Escape") {
-                          setNewFolderDept(null);
-                          setNewFolderName("");
-                        }
-                      }}
-                      placeholder="Folder name..."
-                      className="w-full bg-hub-sidebar-hover border border-hub-sidebar-border rounded px-2 py-1 text-xs text-hub-sidebar-text placeholder-hub-sidebar-muted focus:outline-none focus:border-hub-accent"
-                    />
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setNewFolderDept(dept)}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-hub-sidebar-muted hover:text-hub-accent transition-colors"
+          return (
+            <div key={area.id} className="mb-0.5 group/area">
+              {/* Area row */}
+              <div className="flex items-center">
+                <button
+                  onClick={() => toggleArea(area.id)}
+                  className={`flex-1 flex items-center gap-2 px-2 py-2 rounded-lg text-sm transition-colors ${
+                    hasActiveFolder
+                      ? "text-hub-sidebar-text"
+                      : "text-hub-sidebar-text hover:bg-hub-sidebar-hover"
+                  }`}
+                >
+                  <span
+                    className="text-hub-sidebar-muted text-[10px] transition-transform duration-150 flex-shrink-0"
+                    style={{
+                      display: "inline-block",
+                      transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
+                    }}
                   >
-                    <span className="text-base leading-none">+</span>
-                    <span>New Folder</span>
-                  </button>
-                )}
+                    ▶
+                  </span>
+                  <AreaIcon />
+                  <span className="flex-1 text-left font-medium text-hub-sidebar-text/80 text-sm truncate">
+                    {area.name}
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleDeleteArea(area.id)}
+                  className="opacity-0 group-hover/area:opacity-100 p-1 mr-1 rounded text-hub-sidebar-muted hover:text-red-400 transition-all"
+                >
+                  <XSmallIcon />
+                </button>
               </div>
-            )}
+
+              {/* Folders */}
+              {isExpanded && (
+                <div className="ml-4 mt-0.5 space-y-0.5">
+                  {areaFolders.map((folder) => {
+                    const isActive = activeKBFolder?.folderId === folder.id;
+                    return (
+                      <div key={folder.id} className="flex items-center group/folder">
+                        <button
+                          onClick={() => openFolder(folder, area)}
+                          className={`flex-1 flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-colors ${
+                            isActive
+                              ? "bg-hub-sidebar-hover text-hub-sidebar-text font-medium"
+                              : "text-hub-sidebar-muted hover:bg-hub-sidebar-hover hover:text-hub-sidebar-text"
+                          }`}
+                        >
+                          <FolderIcon />
+                          <span className="flex-1 text-left truncate">{folder.name}</span>
+                          {folder.entry_count > 0 && (
+                            <span className="text-[10px] bg-black/30 text-hub-sidebar-muted rounded px-1.5 py-0.5 flex-shrink-0">
+                              {folder.entry_count}
+                            </span>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteFolder(folder.id)}
+                          className="opacity-0 group-hover/folder:opacity-100 p-1 mr-1 rounded text-hub-sidebar-muted hover:text-red-400 transition-all"
+                        >
+                          <XSmallIcon />
+                        </button>
+                      </div>
+                    );
+                  })}
+
+                  {/* Inline new folder */}
+                  {newFolderAreaId === area.id ? (
+                    <div className="px-3 py-1">
+                      <input
+                        autoFocus
+                        value={newFolderName}
+                        onChange={(e) => setNewFolderName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleAddFolder(area);
+                          if (e.key === "Escape") {
+                            setNewFolderAreaId(null);
+                            setNewFolderName("");
+                          }
+                        }}
+                        placeholder="Folder name..."
+                        className="w-full bg-hub-sidebar-hover border border-hub-sidebar-border rounded px-2 py-1 text-xs text-hub-sidebar-text placeholder-hub-sidebar-muted focus:outline-none focus:border-hub-accent"
+                      />
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setNewFolderAreaId(area.id)}
+                      className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-hub-sidebar-muted hover:text-hub-accent transition-colors"
+                    >
+                      <PlusIcon />
+                      <span>New Folder</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Inline new area */}
+        {showNewArea && (
+          <div className="mt-1 px-2">
+            <input
+              autoFocus
+              value={newAreaName}
+              onChange={(e) => setNewAreaName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAddArea();
+                if (e.key === "Escape") {
+                  setShowNewArea(false);
+                  setNewAreaName("");
+                }
+              }}
+              placeholder="Area name..."
+              className="w-full bg-hub-sidebar-hover border border-hub-sidebar-border rounded-lg px-2 py-1.5 text-xs text-hub-sidebar-text placeholder-hub-sidebar-muted focus:outline-none focus:border-hub-accent"
+            />
           </div>
-        ))}
+        )}
       </div>
 
       {/* Bottom */}
@@ -227,6 +359,8 @@ export default function Sidebar({
     </aside>
   );
 }
+
+// ── SidebarItem ───────────────────────────────────────────────────────────────
 
 function SidebarItem({
   icon,
@@ -268,6 +402,8 @@ function SidebarItem({
     </button>
   );
 }
+
+// ── Icons ─────────────────────────────────────────────────────────────────────
 
 function DashboardIcon() {
   return (
@@ -323,7 +459,7 @@ function BuildingIcon() {
   );
 }
 
-function BuildingIconSm() {
+function AreaIcon() {
   return (
     <svg className="w-3.5 h-3.5 text-hub-sidebar-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -346,6 +482,22 @@ function FolderIcon() {
     <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
         d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
+  );
+}
+
+function XSmallIcon() {
+  return (
+    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
     </svg>
   );
 }

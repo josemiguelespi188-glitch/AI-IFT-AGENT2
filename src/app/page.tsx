@@ -3,12 +3,13 @@
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import TeamMembersView from "@/components/TeamMembersView";
-import DocumentsView from "@/components/DocumentsView";
 import ChatView from "@/components/ChatView";
 import DashboardView from "@/components/DashboardView";
 import UnansweredTicketsView from "@/components/UnansweredTicketsView";
 import AgentsView from "@/components/AgentsView";
 import IntegrationsView from "@/components/IntegrationsView";
+import KnowledgeBaseView from "@/components/KnowledgeBaseView";
+import type { ActiveKBFolder } from "@/components/KnowledgeBaseView";
 
 export type ActiveView =
   | "dashboard"
@@ -16,25 +17,22 @@ export type ActiveView =
   | "ai-assistant"
   | "unanswered-tickets"
   | "team-members"
-  | "documents"
+  | "knowledge-base"
   | "organization"
   | "integrations"
   | "settings";
 
 export default function HomePage() {
   const [activeView, setActiveView] = useState<ActiveView>("dashboard");
-  const [activeFolder, setActiveFolder] = useState<{
-    folderId: string;
-    department: string;
-  } | null>(null);
+  const [activeKBFolder, setActiveKBFolder] = useState<ActiveKBFolder | null>(null);
 
   return (
     <div className="flex h-screen bg-hub-bg overflow-hidden">
       <Sidebar
         activeView={activeView}
         setActiveView={setActiveView}
-        activeFolder={activeFolder}
-        setActiveFolder={setActiveFolder}
+        activeKBFolder={activeKBFolder}
+        setActiveKBFolder={setActiveKBFolder}
         unansweredCount={4}
       />
 
@@ -49,8 +47,8 @@ export default function HomePage() {
 
         {activeView === "team-members" && <TeamMembersView />}
 
-        {activeView === "documents" && activeFolder && (
-          <DocumentsView folder={activeFolder} />
+        {activeView === "knowledge-base" && activeKBFolder && (
+          <KnowledgeBaseView folder={activeKBFolder} />
         )}
 
         {activeView === "organization" && (

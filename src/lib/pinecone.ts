@@ -25,6 +25,8 @@ async function generateEmbedding(text: string): Promise<number[]> {
   return response.data[0].embedding;
 }
 
+// ── Legacy QA knowledge ───────────────────────────────────────────────────────
+
 export async function upsertKnowledge(entry: {
   id: string;
   question: string;
@@ -114,7 +116,6 @@ export async function deleteKnowledgeEntry(id: string): Promise<void> {
   }
 }
 
-// Seed Pinecone with initial knowledge (run once)
 export async function seedPineconeFromSupabase(
   entries: Array<{
     id: string;
@@ -138,4 +139,131 @@ export async function seedPineconeFromSupabase(
   }
 
   return { seeded, errors };
+}
+
+// ── KB structured knowledge (area/folder/entry, chunked) ─────────────────────
+
+const KB_CHUNK_SIZE = 1400; // chars per chunk
+const KB_CHUNK_OVERLAP = 150;
+
+function chunkText(text: string): string[] {
+  if (text.length <= KB_CHUNK_SIZE) return [text.trim()].filter(Boolean);
+  const chunks: string[] = [];
+  let start = 0;
+  while (start < text.length) {
+    const chunk = text.slice(start, start + KB_CHUNK_SIZE).trim();
+    if (chunk) chunks.push(chunk);
+    start += KB_CHUNK_SIZE - KB_CHUNK_OVERLAP;
+  }
+  return chunks;
+}
+
+/**
+ * Vectorize a KB entry as overlapping chunks, upsert all to Pinecone.
+ * Returns the list of vector IDs created (needed for future deletion).
+ */
+export async function upsertKBEntry(entry: {
+  entryId: string;
+  text: string;
+  area: string;
+  folder: string;
+  title: string;
+}): Promise<string[]> {
+  const pc = getPineconeClient();
+  const index = pc.Index(INDEX_NAME);
+  const chunks = chunkText(entry.text);
+  const chunkIds: string[] = [];
+
+  for (let i = 0; i < chunks.length; i++) {
+    const chunkId = `kb-${entry.entryId}-chunk-${i}`;
+    const embedding = await generateEmbedding(chunks[i]);
+
+    await index.upsert([
+      {
+        id: chunkId,
+        values: embedding,
+        metadata: {
+          record_type: "kb_chunk",
+          entry_id: entry.entryId,
+          area: entry.area,
+          folder: entry.folder,
+          title: entry.title,
+          content_preview: chunks[i].slice(0, 512),
+          chunk_index: i,
+          total_chunks: chunks.length,
+        },
+      },
+    ]);
+
+    chunkIds.push(chunkId);
+  }
+
+  return chunkIds;
+}
+
+/**
+ * Delete a set of KB chunk vectors from Pinecone by their IDs.
+ */
+export async function deleteKBChunks(chunkIds: string[]): Promise<void> {
+  if (chunkIds.length === 0) return;
+  const pc = getPineconeClient();
+  const index = pc.Index(INDEX_NAME);
+  await index.deleteMany(chunkIds);
+}
+
+export interface KBSearchResult {
+  entryId: string;
+  title: string;
+  area: string;
+  folder: string;
+  contentPreview: string;
+  score: number;
+  chunkIndex: number;
+}
+
+/**
+ * Semantic search over KB chunks. Filters by area/folder if provided.
+ * De-duplicates by entryId, keeping the highest-scoring chunk per entry.
+ */
+export async function searchKBEntries(
+  query: string,
+  options: { area?: string; folder?: string; topK?: number } = {}
+): Promise<KBSearchResult[]> {
+  const pc = getPineconeClient();
+  const index = pc.Index(INDEX_NAME);
+  const embedding = await generateEmbedding(query);
+
+  const filter: Record<string, unknown> = { record_type: "kb_chunk" };
+  if (options.area) filter.area = options.area;
+  if (options.folder) filter.folder = options.folder;
+
+  const rawTopK = (options.topK ?? 5) * 3; // over-fetch to allow de-dup
+  const results = await index.query({
+    vector: embedding,
+    topK: rawTopK,
+    filter,
+    includeMetadata: true,
+  });
+
+  // Keep best score per entryId
+  const seen = new Map<string, KBSearchResult>();
+  for (const match of results.matches ?? []) {
+    const entryId = String(match.metadata?.entry_id ?? match.id);
+    const score = match.score ?? 0;
+    if (!seen.has(entryId) || seen.get(entryId)!.score < score) {
+      seen.set(entryId, {
+        entryId,
+        title: String(match.metadata?.title ?? ""),
+        area: String(match.metadata?.area ?? ""),
+        folder: String(match.metadata?.folder ?? ""),
+        contentPreview: String(match.metadata?.content_preview ?? ""),
+        score,
+        chunkIndex: Number(match.metadata?.chunk_index ?? 0),
+      });
+    }
+  }
+
+  return Array.from(seen.values())
+    .sort((a, b) => b.score - a.score)
+    .slice(0, options.topK ?? 5);
 }
