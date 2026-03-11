@@ -1,5 +1,8 @@
 import { Pinecone } from "@pinecone-database/pinecone";
+import OpenAI from "openai";
 import type { KnowledgeSearchResult } from "@/types";
+
+const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 let pineconeClient: Pinecone | null = null;
 
@@ -14,20 +17,12 @@ function getPineconeClient(): Pinecone {
 
 const INDEX_NAME = process.env.PINECONE_INDEX_NAME ?? "ift-knowledge-base";
 
-// Simple embedding using text hash (replace with real embeddings in production)
-// In production, use OpenAI embeddings or Anthropic's embedding model
 async function generateEmbedding(text: string): Promise<number[]> {
-  // Fallback: sparse vector representation using character codes
-  // For production, replace with: await openai.embeddings.create({ model: "text-embedding-3-small", input: text })
-  const vector = new Array(1536).fill(0);
-  const normalized = text.toLowerCase().slice(0, 1000);
-  for (let i = 0; i < normalized.length; i++) {
-    const idx = normalized.charCodeAt(i) % 1536;
-    vector[idx] += 1 / normalized.length;
-  }
-  // Normalize
-  const magnitude = Math.sqrt(vector.reduce((sum, v) => sum + v * v, 0));
-  return magnitude > 0 ? vector.map((v) => v / magnitude) : vector;
+  const response = await openaiClient.embeddings.create({
+    model: "text-embedding-3-small",
+    input: text.slice(0, 8000),
+  });
+  return response.data[0].embedding;
 }
 
 export async function upsertKnowledge(entry: {

@@ -9,14 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.38.0",
     "@pinecone-database/pinecone": "^3.0.0",
     "@supabase/supabase-js": "^2.45.0",
-    "next": "15.1.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "date-fns": "^4.1.0",
     "lucide-react": "^0.462.0",
-    "date-fns": "^4.1.0"
+    "next": "15.1.0",
+    "openai": "^6.27.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",
