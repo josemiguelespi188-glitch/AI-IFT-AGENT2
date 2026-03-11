@@ -18,6 +18,7 @@ export type InquiryStatus =
   | "processing"
   | "resolved"
   | "escalated"
+  | "needs_verification"
   | "duplicate";
 
 export type TaxDocumentType = "1099-DIV" | "K-1" | "1099-INT" | "1099-B" | "other";

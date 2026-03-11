@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["@anthropic-ai/sdk"],
-  },
+  serverExternalPackages: ["openai"],
 };
 
 export default nextConfig;
