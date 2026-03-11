@@ -9,6 +9,7 @@ interface Props {
   setActiveView: (v: ActiveView) => void;
   activeFolder: { folderId: string; department: string } | null;
   setActiveFolder: (f: { folderId: string; department: string } | null) => void;
+  unansweredCount?: number;
 }
 
 const DEPARTMENTS = ["Investor Relations", "Operations", "Client Success"];
@@ -18,6 +19,7 @@ export default function Sidebar({
   setActiveView,
   activeFolder,
   setActiveFolder,
+  unansweredCount = 4,
 }: Props) {
   const [folders, setFolders] = useState<DocFolder[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
@@ -54,6 +56,11 @@ export default function Sidebar({
   const foldersByDept = (dept: string) =>
     folders.filter((f) => f.department === dept);
 
+  const nav = (v: ActiveView) => {
+    setActiveView(v);
+    setActiveFolder(null);
+  };
+
   return (
     <aside className="w-64 flex-shrink-0 bg-hub-sidebar flex flex-col h-screen">
       {/* Header */}
@@ -76,38 +83,55 @@ export default function Sidebar({
       {/* Main nav */}
       <nav className="px-3 pt-4 space-y-0.5">
         <SidebarItem
+          icon={<DashboardIcon />}
+          label="Dashboard"
+          active={activeView === "dashboard"}
+          onClick={() => nav("dashboard")}
+        />
+        <SidebarItem
+          icon={<AgentsIcon />}
+          label="AI Agents"
+          active={activeView === "ai-agents"}
+          onClick={() => nav("ai-agents")}
+        />
+        <SidebarItem
           icon={<ChatIcon />}
-          label="AI Assistant"
+          label="Inquiries"
           active={activeView === "ai-assistant"}
-          onClick={() => {
-            setActiveView("ai-assistant");
-            setActiveFolder(null);
-          }}
+          onClick={() => nav("ai-assistant")}
+        />
+        <SidebarItem
+          icon={<TicketIcon />}
+          label="Unanswered Tickets"
+          active={activeView === "unanswered-tickets"}
+          onClick={() => nav("unanswered-tickets")}
+          badge={unansweredCount > 0 ? unansweredCount : undefined}
+          badgeColor="red"
         />
         <SidebarItem
           icon={<BuildingIcon />}
           label="Organization"
           active={activeView === "organization"}
-          onClick={() => {
-            setActiveView("organization");
-            setActiveFolder(null);
-          }}
+          onClick={() => nav("organization")}
         />
         <SidebarItem
           icon={<PeopleIcon />}
           label="Team Members"
           active={activeView === "team-members"}
-          onClick={() => {
-            setActiveView("team-members");
-            setActiveFolder(null);
-          }}
+          onClick={() => nav("team-members")}
+        />
+        <SidebarItem
+          icon={<IntegrationsIcon />}
+          label="Integrations"
+          active={activeView === "integrations"}
+          onClick={() => nav("integrations")}
         />
       </nav>
 
       {/* Departments */}
       <div className="px-3 mt-6 flex-1 overflow-y-auto">
         <p className="text-hub-sidebar-muted text-[10px] font-semibold tracking-widest px-2 mb-2 uppercase">
-          Departments
+          Knowledge Base
         </p>
 
         {DEPARTMENTS.map((dept) => (
@@ -197,10 +221,7 @@ export default function Sidebar({
           icon={<SettingsIcon />}
           label="Settings"
           active={activeView === "settings"}
-          onClick={() => {
-            setActiveView("settings");
-            setActiveFolder(null);
-          }}
+          onClick={() => nav("settings")}
         />
       </div>
     </aside>
@@ -212,11 +233,15 @@ function SidebarItem({
   label,
   active,
   onClick,
+  badge,
+  badgeColor,
 }: {
   icon: React.ReactNode;
   label: string;
   active: boolean;
   onClick: () => void;
+  badge?: number;
+  badgeColor?: "red" | "accent";
 }) {
   return (
     <button
@@ -228,8 +253,37 @@ function SidebarItem({
       }`}
     >
       <span>{icon}</span>
-      {label}
+      <span className="flex-1 text-left">{label}</span>
+      {badge !== undefined && (
+        <span
+          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+            badgeColor === "red"
+              ? "bg-red-500 text-white"
+              : "bg-hub-accent text-hub-sidebar"
+          }`}
+        >
+          {badge}
+        </span>
+      )}
     </button>
+  );
+}
+
+function DashboardIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+    </svg>
+  );
+}
+
+function AgentsIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-2" />
+    </svg>
   );
 }
 
@@ -238,6 +292,24 @@ function ChatIcon() {
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
         d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+    </svg>
+  );
+}
+
+function TicketIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+    </svg>
+  );
+}
+
+function IntegrationsIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
     </svg>
   );
 }

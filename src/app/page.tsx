@@ -5,16 +5,24 @@ import Sidebar from "@/components/Sidebar";
 import TeamMembersView from "@/components/TeamMembersView";
 import DocumentsView from "@/components/DocumentsView";
 import ChatView from "@/components/ChatView";
+import DashboardView from "@/components/DashboardView";
+import UnansweredTicketsView from "@/components/UnansweredTicketsView";
+import AgentsView from "@/components/AgentsView";
+import IntegrationsView from "@/components/IntegrationsView";
 
 export type ActiveView =
+  | "dashboard"
+  | "ai-agents"
   | "ai-assistant"
+  | "unanswered-tickets"
   | "team-members"
   | "documents"
   | "organization"
+  | "integrations"
   | "settings";
 
 export default function HomePage() {
-  const [activeView, setActiveView] = useState<ActiveView>("ai-assistant");
+  const [activeView, setActiveView] = useState<ActiveView>("dashboard");
   const [activeFolder, setActiveFolder] = useState<{
     folderId: string;
     department: string;
@@ -27,10 +35,17 @@ export default function HomePage() {
         setActiveView={setActiveView}
         activeFolder={activeFolder}
         setActiveFolder={setActiveFolder}
+        unansweredCount={4}
       />
 
       <div className="flex-1 overflow-auto flex flex-col min-h-0">
+        {activeView === "dashboard" && <DashboardView />}
+
+        {activeView === "ai-agents" && <AgentsView />}
+
         {activeView === "ai-assistant" && <ChatView />}
+
+        {activeView === "unanswered-tickets" && <UnansweredTicketsView />}
 
         {activeView === "team-members" && <TeamMembersView />}
 
@@ -44,6 +59,8 @@ export default function HomePage() {
             <p className="text-hub-muted text-sm">Organization overview coming soon.</p>
           </div>
         )}
+
+        {activeView === "integrations" && <IntegrationsView />}
 
         {activeView === "settings" && (
           <div className="p-8 animate-fade-in">
