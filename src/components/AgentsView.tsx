@@ -220,8 +220,8 @@ export default function AgentsView() {
             {/* Agent header */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-hub-accent/20 flex items-center justify-center text-lg">
-                  🤖
+                <div className="w-10 h-10 rounded-xl bg-hub-accent/20 flex items-center justify-center text-hub-accent">
+                  <CpuIcon />
                 </div>
                 <div>
                   <input
@@ -267,7 +267,7 @@ export default function AgentsView() {
                       : "bg-hub-accent text-hub-sidebar hover:bg-hub-accent-dark"
                   }`}
                 >
-                  {saved ? "✓ Saved" : "Save Agent"}
+                  {saved ? "Saved" : "Save Agent"}
                 </button>
               </div>
             </div>
@@ -419,11 +419,13 @@ export default function AgentsView() {
                       </div>
                       <span
                         onClick={() => toggleChannel(ch)}
-                        className="text-hub-text text-sm"
+                        className="text-hub-text text-sm flex items-center gap-1.5"
                       >
-                        {ch === "Zendesk" && "🎫 "}
-                        {ch === "Email" && "📧 "}
-                        {ch === "Axiskey" && "🏛️ "}
+                        <span className="text-hub-muted">
+                          {ch === "Zendesk" && <TicketIcon />}
+                          {ch === "Email" && <MailIcon />}
+                          {ch === "Axiskey" && <KeyIcon />}
+                        </span>
                         {ch}
                       </span>
                     </label>
@@ -497,11 +499,58 @@ export default function AgentsView() {
       ) : (
         <div className="flex-1 flex items-center justify-center text-hub-muted">
           <div className="text-center">
-            <div className="text-5xl mb-3">🤖</div>
+            <div className="flex justify-center mb-3 opacity-30"><CpuIconLg /></div>
             <p className="text-sm font-medium">Select an agent to configure</p>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+// ── Icons ─────────────────────────────────────────────────────────────────────
+
+function CpuIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M9 3H7a2 2 0 00-2 2v2M9 3h6M9 3v2m6-2h2a2 2 0 012 2v2m0 0h-2m2 0v6m0 0h-2m2 0v2a2 2 0 01-2 2h-2m0 0H9m6 0v2m-6-2H7a2 2 0 01-2-2v-2m0 0H3m2 0V9M3 9h2M3 9V7m6 12v2m0-2H9m6 0h-6" />
+    </svg>
+  );
+}
+
+function CpuIconLg() {
+  return (
+    <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
+        d="M9 3H7a2 2 0 00-2 2v2M9 3h6M9 3v2m6-2h2a2 2 0 012 2v2m0 0h-2m2 0v6m0 0h-2m2 0v2a2 2 0 01-2 2h-2m0 0H9m6 0v2m-6-2H7a2 2 0 01-2-2v-2m0 0H3m2 0V9M3 9h2M3 9V7m6 12v2m0-2H9m6 0h-6" />
+    </svg>
+  );
+}
+
+function TicketIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+    </svg>
+  );
+}
+
+function MailIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+  );
+}
+
+function KeyIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+    </svg>
   );
 }

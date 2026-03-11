@@ -131,7 +131,7 @@ export default function UnansweredTicketsView() {
   };
 
   const channelIcon = (ch: Ticket["channel"]) =>
-    ch === "zendesk" ? "🎫" : ch === "email" ? "📧" : "🏛️";
+    ch === "zendesk" ? <TicketIcon /> : ch === "email" ? <MailIcon /> : <KeyIcon />;
 
   const channelLabel = (ch: Ticket["channel"]) =>
     ch === "zendesk" ? "Zendesk" : ch === "email" ? "Email" : "Axiskey";
@@ -175,7 +175,14 @@ export default function UnansweredTicketsView() {
                     : "bg-hub-bg text-hub-muted hover:text-hub-text border border-hub-border"
                 }`}
               >
-                {ch === "all" ? "All" : ch === "zendesk" ? "🎫 Zendesk" : ch === "email" ? "📧 Email" : "🏛️ Axiskey"}
+                {ch === "all" ? "All" : (
+                  <span className="flex items-center gap-1.5">
+                    {ch === "zendesk" && <TicketIcon />}
+                    {ch === "email" && <MailIcon />}
+                    {ch === "axiskey" && <KeyIcon />}
+                    {ch === "zendesk" ? "Zendesk" : ch === "email" ? "Email" : "Axiskey"}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -195,7 +202,7 @@ export default function UnansweredTicketsView() {
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm">{channelIcon(ticket.channel)}</span>
+                  <span className="text-hub-muted">{channelIcon(ticket.channel)}</span>
                   <span className="text-hub-muted text-xs">
                     {channelLabel(ticket.channel)} · {ticket.ticketRef}
                   </span>
@@ -244,7 +251,7 @@ export default function UnansweredTicketsView() {
               </button>
               <div>
                 <div className="flex items-center gap-2">
-                  <span>{channelIcon(selectedTicket.channel)}</span>
+                  <span className="text-hub-muted">{channelIcon(selectedTicket.channel)}</span>
                   <span className="text-hub-text font-semibold text-sm">
                     {selectedTicket.ticketRef}
                   </span>
@@ -303,7 +310,7 @@ export default function UnansweredTicketsView() {
 
                 {/* Missing info alert */}
                 <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200">
-                  <span className="text-amber-500 mt-0.5 flex-shrink-0">⚠️</span>
+                  <span className="text-amber-500 mt-0.5 flex-shrink-0"><AlertIcon /></span>
                   <div>
                     <p className="text-amber-800 text-xs font-semibold">
                       Missing Information
@@ -362,7 +369,7 @@ export default function UnansweredTicketsView() {
                         Regenerated Response
                       </p>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold">
-                        94% confidence ✓
+                        94% confidence
                       </span>
                     </div>
                     <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-hub-text text-sm leading-relaxed whitespace-pre-line">
@@ -371,7 +378,7 @@ export default function UnansweredTicketsView() {
 
                     {sent ? (
                       <div className="flex items-center gap-2 p-3 rounded-xl bg-green-50 border border-green-200">
-                        <span className="text-green-500">✅</span>
+                        <span className="text-green-500"><CheckCircleIcon /></span>
                         <p className="text-green-700 text-sm font-semibold">
                           Sent via {channelLabel(selectedTicket.channel)}
                         </p>
@@ -411,7 +418,7 @@ export default function UnansweredTicketsView() {
       ) : (
         <div className="flex-1 flex items-center justify-center text-hub-muted">
           <div className="text-center">
-            <div className="text-5xl mb-3">📭</div>
+            <div className="flex justify-center mb-3 opacity-30"><InboxEmptyIcon /></div>
             <p className="text-sm font-medium">Select a ticket to review</p>
             <p className="text-xs mt-1">
               Add missing info and regenerate the AI response
@@ -431,5 +438,61 @@ function Row({ label, value }: { label: string; value: string }) {
       </span>
       <span className="text-hub-text text-xs">{value}</span>
     </div>
+  );
+}
+
+// ── Icons ─────────────────────────────────────────────────────────────────────
+
+function TicketIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+    </svg>
+  );
+}
+
+function MailIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+  );
+}
+
+function KeyIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+    </svg>
+  );
+}
+
+function AlertIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+  );
+}
+
+function CheckCircleIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+}
+
+function InboxEmptyIcon() {
+  return (
+    <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
+        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+    </svg>
   );
 }
