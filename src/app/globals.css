@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 :root {
+  --hub-bg: #192919;
+  --hub-sidebar: #142014;
+  --hub-card: #1d2d1d;
+  --hub-accent: #4ade80;
+  --hub-border: #2a3d2a;
   --ift-navy: #0A1628;
   --ift-blue: #0D2B5E;
   --ift-accent: #1E5FD8;
@@ -10,15 +15,16 @@
 }
 
 body {
-  background-color: var(--ift-navy);
-  color: #E8EDF5;
+  background-color: var(--hub-bg);
+  color: #d4e8d4;
   font-family: 'Inter', system-ui, sans-serif;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #0D2B5E; }
-::-webkit-scrollbar-thumb { background: #1E5FD8; border-radius: 3px; }
+::-webkit-scrollbar-track { background: var(--hub-sidebar); }
+::-webkit-scrollbar-thumb { background: #2a3d2a; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3a5a3a; }
 
 /* Animations */
 @keyframes fadeIn {

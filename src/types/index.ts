@@ -157,6 +157,38 @@ export interface KnowledgeSearchResult {
   source: string;
 }
 
+// ─── Team & Documents Types ───────────────────────────────────────────────────
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  position: string;
+  department: string;
+  responsibilities: string[];
+  email: string;
+  color: string;
+  created_at: string;
+}
+
+export interface DocFolder {
+  id: string;
+  name: string;
+  department: string;
+  document_count: number;
+}
+
+export interface Document {
+  id: string;
+  name: string;
+  folder_id: string;
+  folder_name: string;
+  department: string;
+  size: number;
+  type: string;
+  uploaded_at: string;
+  uploaded_by?: string;
+}
+
 // ─── API Response Types ───────────────────────────────────────────────────────
 
 export interface ApiResponse<T> {
