@@ -398,6 +398,7 @@ Process this inquiry step by step:
     const toolCalls = message.tool_calls ?? [];
 
     for (const toolCall of toolCalls) {
+      if (toolCall.type !== "function") continue;
       let input: Record<string, unknown> = {};
       try {
         input = JSON.parse(toolCall.function.arguments);
