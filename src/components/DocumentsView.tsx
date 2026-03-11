@@ -24,7 +24,7 @@ function formatDate(iso: string) {
   });
 }
 
-function fileIcon(type: string) {
+function fileIcon(type: string): { icon: string; label: string } {
   if (type.includes("pdf")) return { icon: "📄", label: "PDF" };
   if (type.includes("word") || type.includes("document")) return { icon: "📝", label: "DOC" };
   if (type.includes("sheet") || type.includes("excel")) return { icon: "📊", label: "XLS" };
@@ -53,7 +53,9 @@ export default function DocumentsView({ folder }: Props) {
     if (docsJson.data) setDocuments(docsJson.data);
     if (foldersJson.data) {
       setAllFolders(foldersJson.data);
-      setCurrentFolder(foldersJson.data.find((f: DocFolder) => f.id === folder.folderId) ?? null);
+      setCurrentFolder(
+        foldersJson.data.find((f: DocFolder) => f.id === folder.folderId) ?? null
+      );
     }
     setLoading(false);
   };
@@ -81,7 +83,7 @@ export default function DocumentsView({ folder }: Props) {
           <div className="flex items-center gap-2 text-hub-muted text-sm mb-1">
             <span>{folder.department}</span>
             <span>/</span>
-            <span className="text-hub-text">{currentFolder?.name ?? "..."}</span>
+            <span className="text-hub-text font-medium">{currentFolder?.name ?? "..."}</span>
           </div>
           <h1 className="text-hub-text text-2xl font-bold">
             {currentFolder?.name ?? "Documents"}
@@ -92,7 +94,7 @@ export default function DocumentsView({ folder }: Props) {
         </div>
         <button
           onClick={() => setShowUpload(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-hub-accent text-hub-sidebar rounded-lg font-semibold text-sm hover:bg-green-300 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-hub-accent text-hub-sidebar-active-text rounded-lg font-semibold text-sm hover:bg-hub-accent-dark transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -113,11 +115,11 @@ export default function DocumentsView({ folder }: Props) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search documents..."
-          className="w-full bg-hub-card border border-hub-border rounded-xl pl-10 pr-4 py-3 text-hub-text text-sm placeholder-hub-muted focus:outline-none focus:border-hub-accent"
+          className="w-full bg-hub-card border border-hub-border rounded-xl pl-10 pr-4 py-3 text-hub-text text-sm placeholder-hub-muted focus:outline-none focus:border-hub-accent shadow-sm"
         />
       </div>
 
-      {/* Table */}
+      {/* Content */}
       {loading ? (
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
@@ -126,7 +128,7 @@ export default function DocumentsView({ folder }: Props) {
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="w-16 h-16 bg-hub-card rounded-2xl flex items-center justify-center mb-4 border border-hub-border">
+          <div className="w-16 h-16 bg-hub-card rounded-2xl flex items-center justify-center mb-4 border border-hub-border shadow-sm">
             <svg className="w-8 h-8 text-hub-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -138,24 +140,22 @@ export default function DocumentsView({ folder }: Props) {
           {!search && (
             <button
               onClick={() => setShowUpload(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-hub-accent text-hub-sidebar rounded-lg font-semibold text-sm hover:bg-green-300 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-hub-accent text-hub-sidebar-active-text rounded-lg font-semibold text-sm hover:bg-hub-accent-dark transition-colors"
             >
               Upload Document
             </button>
           )}
         </div>
       ) : (
-        <div className="bg-hub-card border border-hub-border rounded-2xl overflow-hidden">
+        <div className="bg-hub-card border border-hub-border rounded-2xl overflow-hidden shadow-sm">
           {/* Table header */}
-          <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-5 py-3 border-b border-hub-border">
+          <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-5 py-3 border-b border-hub-border bg-hub-bg">
             <span className="text-hub-muted text-xs font-semibold uppercase tracking-wide w-10">Type</span>
             <span className="text-hub-muted text-xs font-semibold uppercase tracking-wide">Name</span>
             <span className="text-hub-muted text-xs font-semibold uppercase tracking-wide text-right w-16">Size</span>
             <span className="text-hub-muted text-xs font-semibold uppercase tracking-wide text-right w-28">Uploaded</span>
             <span className="w-8" />
           </div>
-
-          {/* Rows */}
           <div className="divide-y divide-hub-border">
             {filtered.map((doc) => {
               const { icon, label } = fileIcon(doc.type);

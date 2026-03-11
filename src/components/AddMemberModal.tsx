@@ -9,7 +9,7 @@ const COLOR_CLASSES: Record<string, string> = {
   purple: "bg-purple-500",
   teal: "bg-teal-500",
   blue: "bg-blue-500",
-  orange: "bg-orange-500",
+  orange: "bg-orange-400",
   pink: "bg-pink-500",
   cyan: "bg-cyan-500",
   indigo: "bg-indigo-500",
@@ -27,15 +27,16 @@ export default function AddMemberModal({ member, onClose, onSaved }: Props) {
   const [department, setDepartment] = useState(member?.department ?? DEPARTMENTS[0]);
   const [email, setEmail] = useState(member?.email ?? "");
   const [color, setColor] = useState(member?.color ?? "purple");
-  const [responsibilities, setResponsibilities] = useState<string[]>(member?.responsibilities ?? [""]);
+  const [responsibilities, setResponsibilities] = useState<string[]>(
+    member?.responsibilities ?? [""]
+  );
   const [saving, setSaving] = useState(false);
 
-  const updateResp = (idx: number, val: string) => {
+  const updateResp = (idx: number, val: string) =>
     setResponsibilities((prev) => prev.map((r, i) => (i === idx ? val : r)));
-  };
-
   const addResp = () => setResponsibilities((prev) => [...prev, ""]);
-  const removeResp = (idx: number) => setResponsibilities((prev) => prev.filter((_, i) => i !== idx));
+  const removeResp = (idx: number) =>
+    setResponsibilities((prev) => prev.filter((_, i) => i !== idx));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,8 +69,11 @@ export default function AddMemberModal({ member, onClose, onSaved }: Props) {
     onClose();
   };
 
+  const inputClass =
+    "mt-1 w-full bg-hub-bg border border-hub-border rounded-lg px-3 py-2 text-hub-text text-sm placeholder-hub-muted focus:outline-none focus:border-hub-accent";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-hub-card border border-hub-border rounded-2xl w-full max-w-md mx-4 shadow-2xl animate-fade-in">
         <div className="flex items-center justify-between px-6 py-5 border-b border-hub-border">
           <h2 className="text-hub-text font-semibold text-base">
@@ -85,8 +89,12 @@ export default function AddMemberModal({ member, onClose, onSaved }: Props) {
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           {/* Avatar color picker */}
           <div className="flex items-center gap-3">
-            <div className={`w-12 h-12 rounded-full ${COLOR_CLASSES[color]} flex items-center justify-center text-white font-bold text-lg flex-shrink-0`}>
-              {name ? name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) : "?"}
+            <div
+              className={`w-12 h-12 rounded-full ${COLOR_CLASSES[color]} flex items-center justify-center text-white font-bold text-lg flex-shrink-0`}
+            >
+              {name
+                ? name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+                : "?"}
             </div>
             <div className="flex gap-2">
               {COLORS.map((c) => (
@@ -94,41 +102,27 @@ export default function AddMemberModal({ member, onClose, onSaved }: Props) {
                   key={c}
                   type="button"
                   onClick={() => setColor(c)}
-                  className={`w-6 h-6 rounded-full ${COLOR_CLASSES[c]} transition-transform ${color === c ? "ring-2 ring-hub-accent scale-110" : "opacity-60 hover:opacity-100"}`}
+                  className={`w-6 h-6 rounded-full ${COLOR_CLASSES[c]} transition-transform ${
+                    color === c ? "ring-2 ring-hub-accent scale-110" : "opacity-50 hover:opacity-100"
+                  }`}
                 />
               ))}
             </div>
           </div>
 
           <div>
-            <label className="text-hub-muted text-xs font-medium uppercase tracking-wide">Full Name *</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="mt-1 w-full bg-hub-bg border border-hub-border rounded-lg px-3 py-2 text-hub-text text-sm placeholder-hub-muted focus:outline-none focus:border-hub-accent"
-              placeholder="e.g. Jane Smith"
-            />
+            <label className="text-hub-muted text-xs font-semibold uppercase tracking-wide">Full Name *</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} placeholder="e.g. Jane Smith" />
           </div>
 
           <div>
-            <label className="text-hub-muted text-xs font-medium uppercase tracking-wide">Position *</label>
-            <input
-              value={position}
-              onChange={(e) => setPosition(e.target.value)}
-              required
-              className="mt-1 w-full bg-hub-bg border border-hub-border rounded-lg px-3 py-2 text-hub-text text-sm placeholder-hub-muted focus:outline-none focus:border-hub-accent"
-              placeholder="e.g. Operations Associate"
-            />
+            <label className="text-hub-muted text-xs font-semibold uppercase tracking-wide">Position *</label>
+            <input value={position} onChange={(e) => setPosition(e.target.value)} required className={inputClass} placeholder="e.g. Operations Associate" />
           </div>
 
           <div>
-            <label className="text-hub-muted text-xs font-medium uppercase tracking-wide">Department</label>
-            <select
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
-              className="mt-1 w-full bg-hub-bg border border-hub-border rounded-lg px-3 py-2 text-hub-text text-sm focus:outline-none focus:border-hub-accent"
-            >
+            <label className="text-hub-muted text-xs font-semibold uppercase tracking-wide">Department</label>
+            <select value={department} onChange={(e) => setDepartment(e.target.value)} className={inputClass}>
               {DEPARTMENTS.map((d) => (
                 <option key={d} value={d}>{d}</option>
               ))}
@@ -136,18 +130,12 @@ export default function AddMemberModal({ member, onClose, onSaved }: Props) {
           </div>
 
           <div>
-            <label className="text-hub-muted text-xs font-medium uppercase tracking-wide">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full bg-hub-bg border border-hub-border rounded-lg px-3 py-2 text-hub-text text-sm placeholder-hub-muted focus:outline-none focus:border-hub-accent"
-              placeholder="name@company.com"
-            />
+            <label className="text-hub-muted text-xs font-semibold uppercase tracking-wide">Email</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="name@company.com" />
           </div>
 
           <div>
-            <label className="text-hub-muted text-xs font-medium uppercase tracking-wide">Responsibilities</label>
+            <label className="text-hub-muted text-xs font-semibold uppercase tracking-wide">Responsibilities</label>
             <div className="mt-1 space-y-2">
               {responsibilities.map((r, i) => (
                 <div key={i} className="flex gap-2">
@@ -170,11 +158,7 @@ export default function AddMemberModal({ member, onClose, onSaved }: Props) {
                   )}
                 </div>
               ))}
-              <button
-                type="button"
-                onClick={addResp}
-                className="text-hub-accent text-xs hover:underline"
-              >
+              <button type="button" onClick={addResp} className="text-hub-accent-dark text-xs hover:underline font-medium">
                 + Add responsibility
               </button>
             </div>
@@ -191,7 +175,7 @@ export default function AddMemberModal({ member, onClose, onSaved }: Props) {
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 px-4 py-2 rounded-lg bg-hub-accent text-hub-sidebar font-semibold hover:bg-green-300 transition-colors text-sm disabled:opacity-50"
+              className="flex-1 px-4 py-2 rounded-lg bg-hub-accent text-hub-sidebar-active-text font-semibold hover:bg-hub-accent-dark transition-colors text-sm disabled:opacity-50"
             >
               {saving ? "Saving..." : member ? "Save Changes" : "Invite Member"}
             </button>

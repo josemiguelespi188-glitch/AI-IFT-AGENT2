@@ -10,18 +10,27 @@ const config: Config = {
     extend: {
       colors: {
         hub: {
-          bg: "#192919",
-          sidebar: "#142014",
-          card: "#1d2d1d",
-          hover: "#223222",
-          border: "#2a3d2a",
-          accent: "#4ade80",
-          "accent-muted": "#166534",
-          text: "#d4e8d4",
-          muted: "#6b8f6b",
+          // ── Main content (light / cream) ──────────────────────
+          bg: "#f0efe8",
+          card: "#ffffff",
+          hover: "#e8e7e0",
+          border: "#e0dfd8",
+          accent: "#c8d432",        // lime-yellow
+          "accent-dark": "#a8b428",
+          text: "#1a1a1a",
+          muted: "#888888",
           red: "#ef4444",
-          "red-bg": "#2d1515",
-          "badge-bg": "#1a3a1a",
+          "red-bg": "#fef2f2",
+          "badge-bg": "#f5f4ed",
+          tan: "#c8b89c",           // beige/tan cards
+          // ── Sidebar (dark) ────────────────────────────────────
+          sidebar: "#141414",
+          "sidebar-text": "#e8e8e8",
+          "sidebar-muted": "#666666",
+          "sidebar-border": "#2a2a2a",
+          "sidebar-hover": "#1e1e1e",
+          "sidebar-active": "#c8d432",
+          "sidebar-active-text": "#141414",
         },
         ift: {
           navy: "#0A1628",

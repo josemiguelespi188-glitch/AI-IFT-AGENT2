@@ -13,28 +13,16 @@ interface Props {
 
 const DEPARTMENTS = ["Investor Relations", "Operations", "Client Success"];
 
-const AVATAR_COLORS: Record<string, string> = {
-  purple: "bg-purple-500",
-  teal: "bg-teal-500",
-  blue: "bg-blue-500",
-  orange: "bg-orange-500",
-  pink: "bg-pink-500",
-  cyan: "bg-cyan-500",
-  indigo: "bg-indigo-500",
-};
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
-
-export default function Sidebar({ activeView, setActiveView, activeFolder, setActiveFolder }: Props) {
+export default function Sidebar({
+  activeView,
+  setActiveView,
+  activeFolder,
+  setActiveFolder,
+}: Props) {
   const [folders, setFolders] = useState<DocFolder[]>([]);
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({ "Investor Relations": true });
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({
+    "Investor Relations": true,
+  });
   const [newFolderDept, setNewFolderDept] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
 
@@ -48,9 +36,8 @@ export default function Sidebar({ activeView, setActiveView, activeFolder, setAc
     fetchFolders();
   }, []);
 
-  const toggleDept = (dept: string) => {
+  const toggleDept = (dept: string) =>
     setExpanded((prev) => ({ ...prev, [dept]: !prev[dept] }));
-  };
 
   const handleAddFolder = async (dept: string) => {
     if (!newFolderName.trim()) return;
@@ -64,74 +51,86 @@ export default function Sidebar({ activeView, setActiveView, activeFolder, setAc
     fetchFolders();
   };
 
-  const foldersByDept = (dept: string) => folders.filter((f) => f.department === dept);
+  const foldersByDept = (dept: string) =>
+    folders.filter((f) => f.department === dept);
 
   return (
-    <aside className="w-64 flex-shrink-0 bg-hub-sidebar flex flex-col h-screen border-r border-hub-border">
+    <aside className="w-64 flex-shrink-0 bg-hub-sidebar flex flex-col h-screen">
       {/* Header */}
-      <div className="px-5 py-5 flex items-center justify-between border-b border-hub-border">
+      <div className="px-5 py-5 flex items-center justify-between border-b border-hub-sidebar-border">
         <div>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-hub-accent rounded flex items-center justify-center">
-              <span className="text-hub-sidebar text-xs font-bold">✦</span>
+            <div className="w-8 h-8 bg-hub-accent rounded-lg flex items-center justify-center">
+              <span className="text-hub-sidebar text-xs font-bold">IFT</span>
             </div>
-            <span className="text-hub-text font-bold text-base">IFT</span>
+            <span className="text-hub-sidebar-text font-bold text-sm">
+              Industry FinTech
+            </span>
           </div>
-          <p className="text-hub-muted text-xs mt-0.5 ml-8">Knowledge Hub</p>
+          <p className="text-hub-sidebar-muted text-xs mt-1 ml-10">
+            Knowledge Hub
+          </p>
         </div>
-        <button className="text-hub-muted hover:text-hub-text transition-colors">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        </button>
       </div>
 
-      {/* Nav */}
+      {/* Main nav */}
       <nav className="px-3 pt-4 space-y-0.5">
-        <NavItem
+        <SidebarItem
           icon={<ChatIcon />}
           label="AI Assistant"
           active={activeView === "ai-assistant"}
-          onClick={() => { setActiveView("ai-assistant"); setActiveFolder(null); }}
+          onClick={() => {
+            setActiveView("ai-assistant");
+            setActiveFolder(null);
+          }}
         />
-        <NavItem
+        <SidebarItem
           icon={<BuildingIcon />}
           label="Organization"
           active={activeView === "organization"}
-          onClick={() => { setActiveView("organization"); setActiveFolder(null); }}
+          onClick={() => {
+            setActiveView("organization");
+            setActiveFolder(null);
+          }}
         />
-        <NavItem
+        <SidebarItem
           icon={<PeopleIcon />}
           label="Team Members"
           active={activeView === "team-members"}
-          onClick={() => { setActiveView("team-members"); setActiveFolder(null); }}
+          onClick={() => {
+            setActiveView("team-members");
+            setActiveFolder(null);
+          }}
         />
       </nav>
 
       {/* Departments */}
       <div className="px-3 mt-6 flex-1 overflow-y-auto">
-        <p className="text-hub-muted text-[10px] font-semibold tracking-widest px-2 mb-2 uppercase">
+        <p className="text-hub-sidebar-muted text-[10px] font-semibold tracking-widest px-2 mb-2 uppercase">
           Departments
         </p>
 
         {DEPARTMENTS.map((dept) => (
           <div key={dept} className="mb-1">
-            {/* Department row */}
             <button
               onClick={() => toggleDept(dept)}
-              className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-hub-text hover:bg-hub-hover transition-colors text-sm"
+              className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-hub-sidebar-text hover:bg-hub-sidebar-hover transition-colors text-sm"
             >
-              <span className="text-hub-muted transition-transform duration-150"
-                style={{ display: "inline-block", transform: expanded[dept] ? "rotate(90deg)" : "rotate(0deg)" }}>
+              <span
+                className="text-hub-sidebar-muted text-[10px] transition-transform duration-150"
+                style={{
+                  display: "inline-block",
+                  transform: expanded[dept] ? "rotate(90deg)" : "rotate(0deg)",
+                }}
+              >
                 ▶
               </span>
               <BuildingIconSm />
-              <span className="flex-1 text-left font-medium text-hub-text/80">{dept}</span>
+              <span className="flex-1 text-left font-medium text-hub-sidebar-text/80 text-sm">
+                {dept}
+              </span>
             </button>
 
-            {/* Folders */}
             {expanded[dept] && (
               <div className="ml-4 mt-0.5 space-y-0.5">
                 {foldersByDept(dept).map((folder) => {
@@ -145,14 +144,14 @@ export default function Sidebar({ activeView, setActiveView, activeFolder, setAc
                       }}
                       className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
                         isActive
-                          ? "bg-hub-hover text-hub-text"
-                          : "text-hub-muted hover:bg-hub-hover hover:text-hub-text"
+                          ? "bg-hub-sidebar-hover text-hub-sidebar-text"
+                          : "text-hub-sidebar-muted hover:bg-hub-sidebar-hover hover:text-hub-sidebar-text"
                       }`}
                     >
                       <FolderIcon />
-                      <span className="flex-1 text-left">{folder.name}</span>
+                      <span className="flex-1 text-left text-xs">{folder.name}</span>
                       {folder.document_count > 0 && (
-                        <span className="text-[10px] bg-hub-card text-hub-muted rounded px-1.5 py-0.5">
+                        <span className="text-[10px] bg-black/30 text-hub-sidebar-muted rounded px-1.5 py-0.5">
                           {folder.document_count}
                         </span>
                       )}
@@ -160,7 +159,6 @@ export default function Sidebar({ activeView, setActiveView, activeFolder, setAc
                   );
                 })}
 
-                {/* Add folder inline */}
                 {newFolderDept === dept ? (
                   <div className="px-3 py-1">
                     <input
@@ -169,16 +167,19 @@ export default function Sidebar({ activeView, setActiveView, activeFolder, setAc
                       onChange={(e) => setNewFolderName(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleAddFolder(dept);
-                        if (e.key === "Escape") { setNewFolderDept(null); setNewFolderName(""); }
+                        if (e.key === "Escape") {
+                          setNewFolderDept(null);
+                          setNewFolderName("");
+                        }
                       }}
                       placeholder="Folder name..."
-                      className="w-full bg-hub-card border border-hub-border rounded px-2 py-1 text-xs text-hub-text placeholder-hub-muted focus:outline-none focus:border-hub-accent"
+                      className="w-full bg-hub-sidebar-hover border border-hub-sidebar-border rounded px-2 py-1 text-xs text-hub-sidebar-text placeholder-hub-sidebar-muted focus:outline-none focus:border-hub-accent"
                     />
                   </div>
                 ) : (
                   <button
                     onClick={() => setNewFolderDept(dept)}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-hub-muted hover:text-hub-accent transition-colors"
+                    className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-hub-sidebar-muted hover:text-hub-accent transition-colors"
                   >
                     <span className="text-base leading-none">+</span>
                     <span>New Folder</span>
@@ -191,19 +192,27 @@ export default function Sidebar({ activeView, setActiveView, activeFolder, setAc
       </div>
 
       {/* Bottom */}
-      <div className="px-3 pb-4 pt-2 border-t border-hub-border mt-2">
-        <NavItem
+      <div className="px-3 pb-4 pt-2 border-t border-hub-sidebar-border">
+        <SidebarItem
           icon={<SettingsIcon />}
           label="Settings"
           active={activeView === "settings"}
-          onClick={() => { setActiveView("settings"); setActiveFolder(null); }}
+          onClick={() => {
+            setActiveView("settings");
+            setActiveFolder(null);
+          }}
         />
       </div>
     </aside>
   );
 }
 
-function NavItem({ icon, label, active, onClick }: {
+function SidebarItem({
+  icon,
+  label,
+  active,
+  onClick,
+}: {
   icon: React.ReactNode;
   label: string;
   active: boolean;
@@ -214,11 +223,11 @@ function NavItem({ icon, label, active, onClick }: {
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
         active
-          ? "bg-hub-accent text-hub-sidebar"
-          : "text-hub-muted hover:bg-hub-hover hover:text-hub-text"
+          ? "bg-hub-sidebar-active text-hub-sidebar-active-text"
+          : "text-hub-sidebar-muted hover:bg-hub-sidebar-hover hover:text-hub-sidebar-text"
       }`}
     >
-      <span className={active ? "text-hub-sidebar" : "text-hub-muted"}>{icon}</span>
+      <span>{icon}</span>
       {label}
     </button>
   );
@@ -244,7 +253,7 @@ function BuildingIcon() {
 
 function BuildingIconSm() {
   return (
-    <svg className="w-3.5 h-3.5 text-hub-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-3.5 h-3.5 text-hub-sidebar-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
         d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
     </svg>

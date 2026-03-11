@@ -18,7 +18,12 @@ function formatBytes(bytes: number) {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
-export default function UploadDocumentModal({ folders, defaultFolderId, onClose, onUploaded }: Props) {
+export default function UploadDocumentModal({
+  folders,
+  defaultFolderId,
+  onClose,
+  onUploaded,
+}: Props) {
   const [folderId, setFolderId] = useState(defaultFolderId ?? folders[0]?.id ?? "");
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -29,7 +34,8 @@ export default function UploadDocumentModal({ folders, defaultFolderId, onClose,
     setFiles((prev) => [...prev, ...Array.from(newFiles)]);
   };
 
-  const removeFile = (idx: number) => setFiles((prev) => prev.filter((_, i) => i !== idx));
+  const removeFile = (idx: number) =>
+    setFiles((prev) => prev.filter((_, i) => i !== idx));
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -62,12 +68,11 @@ export default function UploadDocumentModal({ folders, defaultFolderId, onClose,
     if (type.includes("word") || type.includes("document")) return "📝";
     if (type.includes("sheet") || type.includes("excel")) return "📊";
     if (type.includes("image")) return "🖼️";
-    if (type.includes("video")) return "🎬";
     return "📎";
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-hub-card border border-hub-border rounded-2xl w-full max-w-md mx-4 shadow-2xl animate-fade-in">
         <div className="flex items-center justify-between px-6 py-5 border-b border-hub-border">
           <h2 className="text-hub-text font-semibold text-base">Upload Documents</h2>
@@ -81,7 +86,9 @@ export default function UploadDocumentModal({ folders, defaultFolderId, onClose,
         <div className="px-6 py-5 space-y-4">
           {/* Folder selector */}
           <div>
-            <label className="text-hub-muted text-xs font-medium uppercase tracking-wide">Destination Folder</label>
+            <label className="text-hub-muted text-xs font-semibold uppercase tracking-wide">
+              Destination Folder
+            </label>
             <select
               value={folderId}
               onChange={(e) => setFolderId(e.target.value)}
@@ -100,11 +107,13 @@ export default function UploadDocumentModal({ folders, defaultFolderId, onClose,
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-              dragOver ? "border-hub-accent bg-hub-accent/5" : "border-hub-border hover:border-hub-accent/50"
+            className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${
+              dragOver
+                ? "border-hub-accent bg-hub-accent/5"
+                : "border-hub-border hover:border-hub-accent/50 hover:bg-hub-hover"
             }`}
           >
-            <div className="w-10 h-10 bg-hub-bg rounded-xl flex items-center justify-center mx-auto mb-3">
+            <div className="w-10 h-10 bg-hub-bg border border-hub-border rounded-xl flex items-center justify-center mx-auto mb-3">
               <svg className="w-5 h-5 text-hub-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -127,7 +136,10 @@ export default function UploadDocumentModal({ folders, defaultFolderId, onClose,
           {files.length > 0 && (
             <div className="space-y-2 max-h-40 overflow-y-auto">
               {files.map((file, i) => (
-                <div key={i} className="flex items-center gap-3 bg-hub-bg border border-hub-border rounded-lg px-3 py-2">
+                <div
+                  key={i}
+                  className="flex items-center gap-3 bg-hub-bg border border-hub-border rounded-lg px-3 py-2"
+                >
                   <span className="text-lg">{fileIcon(file.type)}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-hub-text text-xs font-medium truncate">{file.name}</p>
@@ -156,9 +168,11 @@ export default function UploadDocumentModal({ folders, defaultFolderId, onClose,
             <button
               onClick={handleUpload}
               disabled={files.length === 0 || uploading || !folderId}
-              className="flex-1 px-4 py-2 rounded-lg bg-hub-accent text-hub-sidebar font-semibold hover:bg-green-300 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 rounded-lg bg-hub-accent text-hub-sidebar-active-text font-semibold hover:bg-hub-accent-dark transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {uploading ? "Uploading..." : `Upload ${files.length > 0 ? `(${files.length})` : ""}`}
+              {uploading
+                ? "Uploading..."
+                : `Upload${files.length > 0 ? ` (${files.length})` : ""}`}
             </button>
           </div>
         </div>

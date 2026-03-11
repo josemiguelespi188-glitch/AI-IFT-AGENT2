@@ -135,14 +135,14 @@ export default function HomePage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-hub-card border border-hub-border rounded-lg p-1 mb-6 self-start w-fit">
+            <div className="flex gap-1 bg-hub-card border border-hub-border rounded-lg p-1 mb-6 self-start w-fit shadow-sm">
               {(["process", "history"] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all capitalize ${
                     activeTab === tab
-                      ? "bg-hub-accent text-hub-sidebar"
+                      ? "bg-hub-accent text-hub-sidebar-active-text"
                       : "text-hub-muted hover:text-hub-text"
                   }`}
                 >
@@ -154,7 +154,7 @@ export default function HomePage() {
             {/* Process Tab */}
             {activeTab === "process" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-hub-card border border-hub-border rounded-2xl p-6">
+                <div className="bg-hub-card border border-hub-border rounded-2xl p-6 shadow-sm">
                   <div className="mb-6">
                     <h2 className="text-lg font-semibold text-hub-text">
                       New Investor Inquiry
@@ -166,13 +166,13 @@ export default function HomePage() {
                   </div>
                   <InquiryForm onResult={handleResult} onError={handleError} />
                   {error && (
-                    <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                      <p className="text-sm text-red-400">{error}</p>
+                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-sm text-red-600">{error}</p>
                     </div>
                   )}
                 </div>
 
-                <div className="bg-hub-card border border-hub-border rounded-2xl p-6">
+                <div className="bg-hub-card border border-hub-border rounded-2xl p-6 shadow-sm">
                   <h2 className="text-lg font-semibold text-hub-text mb-6">
                     AI Agent Response
                   </h2>
@@ -202,7 +202,7 @@ export default function HomePage() {
                   <button
                     onClick={fetchHistory}
                     disabled={loadingHistory}
-                    className="text-xs text-hub-accent hover:text-green-300 transition-colors disabled:opacity-50"
+                    className="text-xs text-hub-accent-dark hover:text-hub-accent transition-colors disabled:opacity-50 font-medium"
                   >
                     {loadingHistory ? "Refreshing..." : "↻ Refresh"}
                   </button>

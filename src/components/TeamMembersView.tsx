@@ -8,7 +8,7 @@ const COLOR_CLASSES: Record<string, string> = {
   purple: "bg-purple-500",
   teal: "bg-teal-500",
   blue: "bg-blue-500",
-  orange: "bg-orange-500",
+  orange: "bg-orange-400",
   pink: "bg-pink-500",
   cyan: "bg-cyan-500",
   indigo: "bg-indigo-500",
@@ -69,7 +69,7 @@ export default function TeamMembersView() {
         </div>
         <button
           onClick={() => { setEditMember(undefined); setShowModal(true); }}
-          className="flex items-center gap-2 px-4 py-2 bg-hub-accent text-hub-sidebar rounded-lg font-semibold text-sm hover:bg-green-300 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-hub-accent text-hub-sidebar-active-text rounded-lg font-semibold text-sm hover:bg-hub-accent-dark transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -90,7 +90,7 @@ export default function TeamMembersView() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, position, or department..."
-          className="w-full bg-hub-card border border-hub-border rounded-xl pl-10 pr-4 py-3 text-hub-text text-sm placeholder-hub-muted focus:outline-none focus:border-hub-accent"
+          className="w-full bg-hub-card border border-hub-border rounded-xl pl-10 pr-4 py-3 text-hub-text text-sm placeholder-hub-muted focus:outline-none focus:border-hub-accent shadow-sm"
         />
       </div>
 
@@ -98,12 +98,12 @@ export default function TeamMembersView() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-hub-card rounded-2xl h-64 animate-pulse border border-hub-border" />
+            <div key={i} className="bg-hub-card rounded-2xl h-64 animate-pulse border border-hub-border shadow-sm" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="w-16 h-16 bg-hub-card rounded-2xl flex items-center justify-center mb-4 border border-hub-border">
+          <div className="w-16 h-16 bg-hub-card rounded-2xl flex items-center justify-center mb-4 border border-hub-border shadow-sm">
             <svg className="w-8 h-8 text-hub-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -137,7 +137,11 @@ export default function TeamMembersView() {
   );
 }
 
-function MemberCard({ member, onEdit, onDelete }: {
+function MemberCard({
+  member,
+  onEdit,
+  onDelete,
+}: {
   member: TeamMember;
   onEdit: () => void;
   onDelete: () => void;
@@ -145,7 +149,7 @@ function MemberCard({ member, onEdit, onDelete }: {
   const colorClass = COLOR_CLASSES[member.color] ?? "bg-blue-500";
 
   return (
-    <div className="bg-hub-card border border-hub-border rounded-2xl p-5 flex flex-col gap-4 hover:border-hub-accent/40 transition-colors animate-fade-in">
+    <div className="bg-hub-card border border-hub-border rounded-2xl p-5 flex flex-col gap-4 hover:shadow-md transition-shadow animate-fade-in shadow-sm">
       {/* Top row */}
       <div className="flex items-start gap-3">
         <div className={`w-11 h-11 rounded-full ${colorClass} flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}>
@@ -178,7 +182,7 @@ function MemberCard({ member, onEdit, onDelete }: {
       </div>
 
       {/* Department badge */}
-      <span className="self-start text-xs text-hub-accent font-medium bg-hub-accent-muted/30 border border-hub-accent/20 px-2.5 py-1 rounded-full">
+      <span className="self-start text-xs font-semibold bg-hub-accent/20 text-hub-accent-dark border border-hub-accent/30 px-2.5 py-1 rounded-full">
         {member.department}
       </span>
 

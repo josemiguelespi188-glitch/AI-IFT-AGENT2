@@ -3,28 +3,24 @@
 @tailwind utilities;
 
 :root {
-  --hub-bg: #192919;
-  --hub-sidebar: #142014;
-  --hub-card: #1d2d1d;
-  --hub-accent: #4ade80;
-  --hub-border: #2a3d2a;
-  --ift-navy: #0A1628;
-  --ift-blue: #0D2B5E;
-  --ift-accent: #1E5FD8;
-  --ift-gold: #C9A84C;
+  --hub-bg: #f0efe8;
+  --hub-sidebar: #141414;
+  --hub-card: #ffffff;
+  --hub-accent: #c8d432;
+  --hub-border: #e0dfd8;
 }
 
 body {
   background-color: var(--hub-bg);
-  color: #d4e8d4;
+  color: #1a1a1a;
   font-family: 'Inter', system-ui, sans-serif;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--hub-sidebar); }
-::-webkit-scrollbar-thumb { background: #2a3d2a; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #3a5a3a; }
+::-webkit-scrollbar-track { background: var(--hub-bg); }
+::-webkit-scrollbar-thumb { background: #d0cfc8; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #b8b7b0; }
 
 /* Animations */
 @keyframes fadeIn {
