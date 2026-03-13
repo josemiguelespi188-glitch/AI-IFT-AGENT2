@@ -136,6 +136,9 @@ export default function DashboardView() {
           </div>
         </div>
 
+        {/* ── Workflow Diagram ──────────────────────────────────────────── */}
+        <WorkflowDiagram />
+
         <div className="space-y-3">
 
           {/* ── Stage 1: Inquiry Channels ─────────────────────────────── */}
@@ -393,6 +396,158 @@ export default function DashboardView() {
             <span className="text-hub-muted text-xs">Live — updates every 30s</span>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Workflow Diagram ───────────────────────────────────────────────────────────
+
+function WorkflowDiagram() {
+  return (
+    <div className="mb-6 rounded-xl border border-hub-border bg-hub-bg/60 p-4">
+      <p className="text-hub-muted text-[10px] font-semibold uppercase tracking-wider mb-3">Architecture Diagram</p>
+      <div className="overflow-x-auto">
+        <svg
+          viewBox="0 0 920 480"
+          width="100%"
+          style={{ minWidth: 640, display: "block" }}
+          xmlns="http://www.w3.org/2000/svg"
+          fontFamily="inherit"
+        >
+          <defs>
+            {/* Arrowheads */}
+            <marker id="arr-neutral" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#94a3b8" />
+            </marker>
+            <marker id="arr-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#22c55e" />
+            </marker>
+            <marker id="arr-amber" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#f59e0b" />
+            </marker>
+            <marker id="arr-purple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#a855f7" />
+            </marker>
+          </defs>
+
+          {/* ── Connection lines (drawn behind nodes) ── */}
+
+          {/* Inputs → Master */}
+          <line x1="180" y1="68" x2="430" y2="68" stroke="#94a3b8" strokeWidth="1.5" markerEnd="url(#arr-neutral)" />
+          <line x1="180" y1="108" x2="270" y2="108" stroke="#94a3b8" strokeWidth="1.5" />
+          <line x1="270" y1="108" x2="270" y2="68" stroke="#94a3b8" strokeWidth="1.5" />
+          <line x1="180" y1="148" x2="270" y2="148" stroke="#94a3b8" strokeWidth="1.5" />
+          <line x1="270" y1="148" x2="270" y2="68" stroke="#94a3b8" strokeWidth="1.5" />
+
+          {/* Master → Agents */}
+          <line x1="530" y1="68" x2="530" y2="95" stroke="#94a3b8" strokeWidth="1.5" />
+          <line x1="530" y1="95" x2="120" y2="95" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="4 3" />
+          <line x1="120" y1="95" x2="120" y2="200" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="4 3" />
+          {/* Fan out to agents */}
+          {[155, 305, 455, 605, 755, 905].map((x) => (
+            <line key={x} x1="120" y1="200" x2={x} y2="215" stroke="#94a3b8" strokeWidth="1.5" markerEnd="url(#arr-neutral)" />
+          ))}
+
+          {/* Agents → Confidence */}
+          {[155, 305, 455, 605, 755, 905].map((x) => (
+            <line key={x} x1={x} y1="272" x2="530" y2="300" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 2" markerEnd="url(#arr-neutral)" />
+          ))}
+
+          {/* Confidence → Auto-send */}
+          <line x1="430" y1="336" x2="225" y2="336" stroke="#22c55e" strokeWidth="1.5" />
+          <line x1="225" y1="336" x2="225" y2="362" stroke="#22c55e" strokeWidth="1.5" markerEnd="url(#arr-green)" />
+
+          {/* Confidence → Review Queue */}
+          <line x1="630" y1="336" x2="775" y2="336" stroke="#f59e0b" strokeWidth="1.5" />
+          <line x1="775" y1="336" x2="775" y2="362" stroke="#f59e0b" strokeWidth="1.5" markerEnd="url(#arr-amber)" />
+
+          {/* Review Queue → Learning Loop */}
+          <line x1="775" y1="418" x2="775" y2="438" stroke="#a855f7" strokeWidth="1.5" />
+          <line x1="775" y1="438" x2="530" y2="438" stroke="#a855f7" strokeWidth="1.5" markerEnd="url(#arr-purple)" />
+
+          {/* Learning Loop feedback → Agents (left side loop) */}
+          <line x1="430" y1="418" x2="40" y2="418" stroke="#a855f7" strokeWidth="1.5" strokeDasharray="5 3" />
+          <line x1="40" y1="418" x2="40" y2="230" stroke="#a855f7" strokeWidth="1.5" strokeDasharray="5 3" />
+          <line x1="40" y1="230" x2="100" y2="230" stroke="#a855f7" strokeWidth="1.5" strokeDasharray="5 3" markerEnd="url(#arr-purple)" />
+
+          {/* Platform Logging — always-on tag along bottom */}
+          <line x1="530" y1="460" x2="530" y2="470" stroke="#94a3b8" strokeWidth="1" />
+
+          {/* ── NODES ── */}
+
+          {/* Input: Zendesk */}
+          <rect x="20" y="50" width="160" height="36" rx="8" fill="#f0fdf4" stroke="#86efac" strokeWidth="1.5" />
+          <text x="100" y="64" textAnchor="middle" fontSize="9" fontWeight="700" fill="#166534">Zendesk</text>
+          <text x="100" y="78" textAnchor="middle" fontSize="8" fill="#4ade80">Support tickets</text>
+
+          {/* Input: Email */}
+          <rect x="20" y="90" width="160" height="36" rx="8" fill="#eff6ff" stroke="#93c5fd" strokeWidth="1.5" />
+          <text x="100" y="104" textAnchor="middle" fontSize="9" fontWeight="700" fill="#1e40af">Email</text>
+          <text x="100" y="118" textAnchor="middle" fontSize="8" fill="#60a5fa">Investor inbox</text>
+
+          {/* Input: AxisKey */}
+          <rect x="20" y="130" width="160" height="36" rx="8" fill="#eef2ff" stroke="#a5b4fc" strokeWidth="1.5" />
+          <text x="100" y="144" textAnchor="middle" fontSize="9" fontWeight="700" fill="#3730a3">AxisKey</text>
+          <text x="100" y="158" textAnchor="middle" fontSize="8" fill="#818cf8">Portal inquiry</text>
+
+          {/* Master AI Agent */}
+          <rect x="430" y="42" width="200" height="52" rx="10" fill="#ecfccb" stroke="#a3e635" strokeWidth="2" />
+          <text x="530" y="62" textAnchor="middle" fontSize="10" fontWeight="800" fill="#365314">Master AI Agent</text>
+          <text x="530" y="76" textAnchor="middle" fontSize="8" fill="#4d7c0f">n8n Orchestration Engine</text>
+          <text x="530" y="88" textAnchor="middle" fontSize="7.5" fill="#84cc16">Classifies · Extracts · Delegates</text>
+
+          {/* Specialist Agents */}
+          {[
+            { x: 80, label: "A1", name: "Investor\nIdentity", fill: "#eff6ff", stroke: "#93c5fd", text: "#1d4ed8" },
+            { x: 230, label: "A2", name: "Client\n& Fund", fill: "#eef2ff", stroke: "#a5b4fc", text: "#4338ca" },
+            { x: 380, label: "A3", name: "FAQ &\nCases", fill: "#f5f3ff", stroke: "#c4b5fd", text: "#6d28d9" },
+            { x: 530, label: "A4", name: "Knowledge\nRetrieval", fill: "#ecfeff", stroke: "#67e8f9", text: "#0e7490" },
+            { x: 680, label: "A5", name: "Response\nPolicy", fill: "#f0fdfa", stroke: "#6ee7b7", text: "#065f46" },
+            { x: 830, label: "A6", name: "Channel\nFormat", fill: "#f0fdf4", stroke: "#86efac", text: "#166534" },
+          ].map(({ x, label, name, fill, stroke, text }) => {
+            const lines = name.split("\n");
+            return (
+              <g key={label}>
+                <rect x={x - 65} y="215" width="130" height="57" rx="8" fill={fill} stroke={stroke} strokeWidth="1.5" />
+                <text x={x} y="231" textAnchor="middle" fontSize="8" fontWeight="700" fill={text} opacity="0.6">{label}</text>
+                <text x={x} y="244" textAnchor="middle" fontSize="9" fontWeight="700" fill="#1e293b">{lines[0]}</text>
+                {lines[1] && <text x={x} y="257" textAnchor="middle" fontSize="9" fontWeight="700" fill="#1e293b">{lines[1]}</text>}
+              </g>
+            );
+          })}
+
+          {/* Confidence & Decision Layer */}
+          <rect x="380" y="300" width="300" height="36" rx="8" fill="#fef3c7" stroke="#fcd34d" strokeWidth="1.5" />
+          <text x="530" y="316" textAnchor="middle" fontSize="9.5" fontWeight="800" fill="#92400e">Confidence & Decision Layer</text>
+          <text x="530" y="329" textAnchor="middle" fontSize="7.5" fill="#b45309">70% threshold · 4 criteria evaluated</text>
+
+          {/* Auto-send */}
+          <rect x="115" y="362" width="220" height="56" rx="8" fill="#f0fdf4" stroke="#86efac" strokeWidth="1.5" />
+          <text x="225" y="381" textAnchor="middle" fontSize="9.5" fontWeight="800" fill="#166534">Auto-Send</text>
+          <text x="225" y="394" textAnchor="middle" fontSize="8" fill="#16a34a">≥ 70% confidence</text>
+          <text x="225" y="407" textAnchor="middle" fontSize="7.5" fill="#4ade80">Response sent via n8n</text>
+
+          {/* Human Review Queue */}
+          <rect x="665" y="362" width="220" height="56" rx="8" fill="#fefce8" stroke="#fde047" strokeWidth="1.5" />
+          <text x="775" y="381" textAnchor="middle" fontSize="9.5" fontWeight="800" fill="#854d0e">Human Review Queue</text>
+          <text x="775" y="394" textAnchor="middle" fontSize="8" fill="#ca8a04">&lt; 70% confidence</text>
+          <text x="775" y="407" textAnchor="middle" fontSize="7.5" fill="#facc15">Operator reviews AI draft</text>
+
+          {/* Learning Loop */}
+          <rect x="430" y="418" width="200" height="36" rx="8" fill="#faf5ff" stroke="#d8b4fe" strokeWidth="1.5" />
+          <text x="530" y="434" textAnchor="middle" fontSize="9.5" fontWeight="800" fill="#6b21a8">Learning Loop</text>
+          <text x="530" y="447" textAnchor="middle" fontSize="7.5" fill="#a855f7">Patterns extracted · KB updated</text>
+
+          {/* Platform Logging (bottom banner) */}
+          <rect x="20" y="460" width="880" height="16" rx="4" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="1" />
+          <text x="460" y="472" textAnchor="middle" fontSize="7.5" fill="#64748b" fontWeight="600">
+            Platform Logging — every inquiry · always · source · investor · fund · confidence score · outcome
+          </text>
+
+          {/* Feedback loop label */}
+          <text x="40" y="340" textAnchor="middle" fontSize="7.5" fill="#a855f7" fontWeight="600" transform="rotate(-90 40 340)">Feedback loop</text>
+        </svg>
       </div>
     </div>
   );
