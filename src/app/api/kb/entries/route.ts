@@ -1,38 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { entryStore, folderStore, type KBEntry, type KBEntryType } from "@/lib/kb-store";
 import { upsertKBEntry, deleteKBChunks } from "@/lib/pinecone";
-import { adjustFolderCount } from "../folders/route";
 
-export type KBEntryType = "note" | "qa";
-
-export interface KBEntry {
-  id: string;
-  folderId: string;
-  folderName: string;
-  areaId: string;
-  areaName: string;
-  title: string;
-  type: KBEntryType;
-  // note type
-  content: string;
-  // qa type
-  question: string;
-  answer: string;
-  // Pinecone state
-  chunkIds: string[];
-  synced: boolean;
-  chunk_count: number;
-  created_at: string;
-  updated_at: string;
-}
-
-const store: KBEntry[] = [];
-
-export function getEntriesByFolder(folderId: string): KBEntry[] {
-  return store.filter((e) => e.folderId === folderId);
-}
-
-// Build text to vectorize based on entry type
-function buildEmbedText(entry: Pick<KBEntry, "type" | "content" | "question" | "answer" | "title">): string {
+function buildEmbedText(
+  entry: Pick<KBEntry, "type" | "content" | "question" | "answer" | "title">
+): string {
   if (entry.type === "qa") {
     return `${entry.title}\n\nQuestion: ${entry.question}\n\nAnswer: ${entry.answer}`;
   }
@@ -41,9 +13,8 @@ function buildEmbedText(entry: Pick<KBEntry, "type" | "content" | "question" | "
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const folderId = searchParams.get("folderId");
-  const data = folderId ? store.filter((e) => e.folderId === folderId) : store;
-  return NextResponse.json({ data });
+  const folderId = searchParams.get("folderId") ?? undefined;
+  return NextResponse.json({ data: entryStore.list(folderId) });
 }
 
 export async function POST(req: NextRequest) {
@@ -56,13 +27,14 @@ export async function POST(req: NextRequest) {
 
   const id = `entry-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const now = new Date().toISOString();
+  const entryType = (type ?? "note") as KBEntryType;
 
   const partialEntry = {
-    type: (type ?? "note") as KBEntryType,
+    type: entryType,
     content: content ?? "",
     question: question ?? "",
     answer: answer ?? "",
-    title: title.trim(),
+    title: (title as string).trim(),
   };
 
   let chunkIds: string[] = [];
@@ -99,8 +71,8 @@ export async function POST(req: NextRequest) {
     updated_at: now,
   };
 
-  store.push(entry);
-  adjustFolderCount(folderId, 1);
+  entryStore.add(entry);
+  folderStore.adjustCount(folderId, 1);
   return NextResponse.json({ data: entry }, { status: 201 });
 }
 
@@ -108,10 +80,9 @@ export async function PUT(req: NextRequest) {
   const body = await req.json();
   const { id, title, content, question, answer } = body;
 
-  const entry = store.find((e) => e.id === id);
+  const entry = entryStore.find(id);
   if (!entry) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  // Remove old Pinecone chunks
   if (entry.chunkIds.length > 0) {
     try {
       await deleteKBChunks(entry.chunkIds);
@@ -120,14 +91,12 @@ export async function PUT(req: NextRequest) {
     }
   }
 
-  // Merge updates into entry first
-  if (title !== undefined) entry.title = title.trim();
+  if (title !== undefined) entry.title = (title as string).trim();
   if (content !== undefined) entry.content = content;
   if (question !== undefined) entry.question = question;
   if (answer !== undefined) entry.answer = answer;
   entry.updated_at = new Date().toISOString();
 
-  // Re-vectorize
   let newChunkIds: string[] = [];
   let synced = false;
   try {
@@ -152,10 +121,9 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const { id } = await req.json();
-  const idx = store.findIndex((e) => e.id === id);
-  if (idx === -1) return NextResponse.json({ error: "not found" }, { status: 404 });
+  const entry = entryStore.find(id);
+  if (!entry) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  const entry = store[idx];
   if (entry.chunkIds.length > 0) {
     try {
       await deleteKBChunks(entry.chunkIds);
@@ -164,7 +132,7 @@ export async function DELETE(req: NextRequest) {
     }
   }
 
-  store.splice(idx, 1);
-  adjustFolderCount(entry.folderId, -1);
+  entryStore.remove(id);
+  folderStore.adjustCount(entry.folderId, -1);
   return NextResponse.json({ ok: true });
 }

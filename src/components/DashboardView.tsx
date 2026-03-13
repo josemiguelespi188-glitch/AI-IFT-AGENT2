@@ -22,18 +22,72 @@ const MOCK_METRICS = {
   ],
 };
 
-const FLOW_AGENTS = [
-  { id: "ir", label: "Investor Info", icon: <BriefcaseIcon />, color: "#c8d432" },
-  { id: "ci", label: "Client Info", icon: <UserIcon />, color: "#86d432" },
-  { id: "faq", label: "FAQ Agent", icon: <QuestionIcon />, color: "#4ade80" },
-  { id: "tmpl", label: "Template Format", icon: <DocumentIcon />, color: "#34d399" },
+const SPECIALIST_AGENTS = [
+  {
+    id: "A1",
+    name: "Investor Identity",
+    purpose: "Identifies the investor. Extracts name, email, entity, and account number — then matches against investor records.",
+    color: "blue",
+  },
+  {
+    id: "A2",
+    name: "Client & Fund",
+    purpose: "Identifies the client, sponsor, fund, deal, and offering. Surfaces deal-specific terms and distribution rules.",
+    color: "indigo",
+  },
+  {
+    id: "A3",
+    name: "FAQ & Similar Cases",
+    purpose: "Checks if the same or a similar inquiry was already resolved across all channels. Surfaces prior approved answers.",
+    color: "violet",
+  },
+  {
+    id: "A4",
+    name: "Knowledge Retrieval",
+    purpose: "Retrieves relevant content from documents, FAQs, policies, portal instructions, and prior approved responses.",
+    color: "cyan",
+  },
+  {
+    id: "A5",
+    name: "Response Policy",
+    purpose: "Determines if the inquiry can be answered safely. Checks compliance rules and flags any escalation requirements.",
+    color: "teal",
+  },
+  {
+    id: "A6",
+    name: "Channel Formatting",
+    purpose: "Converts the approved answer into the proper format — Zendesk reply, email, or AxisKey portal message.",
+    color: "emerald",
+  },
 ];
 
-const FLOW_INPUTS = [
-  { label: "Zendesk", icon: <TicketIcon />, color: "#17494D" },
-  { label: "Email", icon: <MailIcon />, color: "#1E5FD8" },
-  { label: "Axiskey", icon: <KeyIcon />, color: "#6366f1" },
+const CONFIDENCE_CRITERIA = [
+  "Information completeness",
+  "Agent agreement",
+  "Data verification",
+  "Compliance clearance",
 ];
+
+const LEARNING_STEPS = [
+  { label: "Human Correction", icon: <PencilSmIcon /> },
+  { label: "Learning Agent", icon: <BrainSmIcon /> },
+  { label: "Extracts Patterns", icon: <SearchSmIcon /> },
+  { label: "Updates Knowledge", icon: <DatabaseSmIcon /> },
+  { label: "Better Responses", icon: <TrendingIcon /> },
+];
+
+const LOG_TAGS = [
+  "Source channel",
+  "Investor name",
+  "Client & fund",
+  "Inquiry category",
+  "AI confidence score",
+  "Auto-sent or reviewed",
+  "Response status",
+  "AI-only or human-assisted",
+];
+
+// ── Main Component ────────────────────────────────────────────────────────────
 
 export default function DashboardView() {
   const [timeRange, setTimeRange] = useState("Today");
@@ -66,231 +120,237 @@ export default function DashboardView() {
         </div>
       </div>
 
-      {/* ── FLOWMAP ─────────────────────────────────────── */}
+      {/* ── HOW IT WORKS ──────────────────────────────────────────────── */}
       <div className="bg-hub-card rounded-2xl border border-hub-border p-6 mb-6">
-        <h2 className="text-hub-text font-semibold text-sm mb-6">
-          How It Works
-        </h2>
-
-        <div className="flex items-center justify-between gap-3 overflow-x-auto pb-2">
-          {/* INPUTS */}
-          <div className="flex flex-col gap-2 flex-shrink-0">
-            <p className="text-hub-muted text-[10px] font-semibold tracking-widest uppercase mb-1 text-center">
-              Inputs
-            </p>
-            {FLOW_INPUTS.map((inp) => (
-              <div
-                key={inp.label}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-hub-border bg-hub-bg text-hub-text text-xs font-medium w-28"
-              >
-                <span className="text-hub-muted flex-shrink-0">{inp.icon}</span>
-                {inp.label}
-              </div>
-            ))}
-          </div>
-
-          {/* Arrow 1 */}
-          <FlowArrow />
-
-          {/* ROUTING */}
-          <div className="flex flex-col items-center flex-shrink-0">
-            <p className="text-hub-muted text-[10px] font-semibold tracking-widest uppercase mb-1">
-              Routing
-            </p>
-            <div className="px-4 py-5 rounded-2xl border-2 border-hub-accent bg-hub-accent/10 text-center w-28">
-              <div className="flex justify-center mb-1 text-hub-accent">
-                <ZapIcon />
-              </div>
-              <p className="text-hub-text text-xs font-semibold">
-                n8n Router
-              </p>
-              <p className="text-hub-muted text-[10px]">rules engine</p>
-            </div>
-          </div>
-
-          {/* Arrow 2 */}
-          <FlowArrow />
-
-          {/* AI AGENTS */}
-          <div className="flex flex-col gap-2 flex-shrink-0">
-            <p className="text-hub-muted text-[10px] font-semibold tracking-widest uppercase mb-1 text-center">
-              AI Agents
-            </p>
-            {FLOW_AGENTS.map((ag) => (
-              <div
-                key={ag.id}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-hub-border bg-hub-bg text-hub-text text-xs font-medium w-36"
-                style={{ borderLeftColor: ag.color, borderLeftWidth: 3 }}
-              >
-                <span className="text-hub-muted flex-shrink-0">{ag.icon}</span>
-                {ag.label}
-              </div>
-            ))}
-          </div>
-
-          {/* Arrow 3 */}
-          <FlowArrow />
-
-          {/* CONFIDENCE CHECK */}
-          <div className="flex flex-col items-center flex-shrink-0">
-            <p className="text-hub-muted text-[10px] font-semibold tracking-widest uppercase mb-1">
-              Check
-            </p>
-            <div className="px-4 py-4 rounded-2xl border-2 border-amber-400 bg-amber-50 text-center w-32">
-              <div className="flex justify-center mb-1 text-amber-500">
-                <ShieldCheckIcon />
-              </div>
-              <p className="text-hub-text text-xs font-semibold">
-                Confidence
-              </p>
-              <p className="text-amber-600 text-[11px] font-bold">≥ 70%?</p>
-            </div>
-          </div>
-
-          {/* Arrow 4 — split YES / NO */}
-          <div className="flex flex-col items-center gap-1 flex-shrink-0">
-            <div className="flex flex-col items-center gap-0.5">
-              <span className="text-[10px] text-green-600 font-bold">YES</span>
-              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </div>
-            <div className="w-px h-6 bg-hub-border" />
-            <div className="flex flex-col items-center gap-0.5">
-              <svg className="w-5 h-5 text-red-400 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-              <span className="text-[10px] text-red-500 font-bold">NO</span>
-            </div>
-          </div>
-
-          {/* OUTPUTS */}
-          <div className="flex flex-col gap-3 flex-shrink-0">
-            <p className="text-hub-muted text-[10px] font-semibold tracking-widest uppercase mb-1 text-center">
-              Output
-            </p>
-            {/* Auto-send */}
-            <div className="px-3 py-3 rounded-2xl border-2 border-green-400 bg-green-50 text-center w-36">
-              <div className="flex justify-center mb-0.5 text-green-600">
-                <CheckCircleIcon />
-              </div>
-              <p className="text-hub-text text-xs font-semibold">Auto-send</p>
-              <p className="text-hub-muted text-[10px]">via n8n → channel</p>
-            </div>
-            {/* Queue */}
-            <div className="px-3 py-3 rounded-2xl border-2 border-amber-300 bg-amber-50 text-center w-36">
-              <div className="flex justify-center mb-0.5 text-amber-500">
-                <ClockIcon />
-              </div>
-              <p className="text-hub-text text-xs font-semibold">Review Queue</p>
-              <p className="text-hub-muted text-[10px]">human + AI assist</p>
+        {/* Section header */}
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h2 className="text-hub-text font-bold text-base">How It Works</h2>
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              {["Multi-channel", "Multi-agent", "Confidence-based", "Human-in-the-loop", "Always learning"].map((tag) => (
+                <span key={tag} className="text-[10px] text-hub-muted bg-hub-bg border border-hub-border px-2 py-0.5 rounded-full">
+                  {tag}
+                </span>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Response path */}
-        <div className="mt-4 pt-4 border-t border-hub-border flex items-center gap-2 text-xs text-hub-muted">
-          <span className="text-green-600 font-semibold flex items-center gap-1">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-            </svg>
-            Auto-sent:
-          </span>
-          <span>
-            Response flows back through n8n to the original channel (Zendesk ticket reply / email / Axiskey portal message)
-          </span>
+        <div className="space-y-3">
+
+          {/* ── Stage 1: Inquiry Channels ─────────────────────────────── */}
+          <FlowStage number={1} label="Inquiry Channels" description="Investor inquiries arrive from three integrated channels">
+            <div className="grid grid-cols-3 gap-3">
+              <ChannelCard icon={<TicketIcon />} name="Zendesk" detail="Support ticket reply" dot="bg-[#17494D]" />
+              <ChannelCard icon={<MailIcon />} name="Email" detail="Investor inbox" dot="bg-blue-500" />
+              <ChannelCard icon={<KeyIcon />} name="AxisKey" detail="Portal inquiry" dot="bg-indigo-500" />
+            </div>
+          </FlowStage>
+
+          <FlowConnector label="Routed to" />
+
+          {/* ── Stage 2: Master AI Agent ──────────────────────────────── */}
+          <FlowStage number={2} label="Master AI Agent" description="Central orchestrator — receives every inquiry and delegates to specialist agents">
+            <div className="bg-gradient-to-r from-hub-accent/10 via-hub-accent/5 to-transparent border border-hub-accent/25 rounded-xl p-4">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-hub-accent/20 flex items-center justify-center text-hub-accent flex-shrink-0">
+                  <BrainIcon />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-hub-text font-bold text-sm">n8n Orchestration Engine</p>
+                    <span className="text-[10px] bg-hub-accent/15 text-hub-accent-dark border border-hub-accent/20 px-2 py-0.5 rounded-full font-semibold">
+                      Central Intelligence
+                    </span>
+                  </div>
+                  <p className="text-hub-muted text-xs leading-relaxed">
+                    The Master AI Agent is the first to receive every inquiry. It extracts context, classifies the intent, identifies the investor and fund, and delegates to all specialist agents simultaneously.
+                  </p>
+                  <div className="flex gap-1.5 mt-2.5 flex-wrap">
+                    {["Receives inquiry", "Classifies intent", "Extracts context", "Identifies investor", "Delegates to agents"].map((step) => (
+                      <span key={step} className="text-[10px] bg-hub-accent/10 text-hub-accent-dark border border-hub-accent/20 px-2 py-0.5 rounded-full font-medium">
+                        {step}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </FlowStage>
+
+          <FlowConnector label="Delegates in parallel to" />
+
+          {/* ── Stage 3: Specialist Agents ────────────────────────────── */}
+          <FlowStage number={3} label="Specialist Agents" description="Six AI agents work in parallel — each focused on one dimension of the inquiry">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              {SPECIALIST_AGENTS.map((agent) => (
+                <AgentCard key={agent.id} {...agent} />
+              ))}
+            </div>
+            <p className="text-hub-muted text-[10px] mt-2 text-center">
+              All six agents run simultaneously — outputs are aggregated before the confidence decision
+            </p>
+          </FlowStage>
+
+          <FlowConnector label="All agent outputs aggregated by" />
+
+          {/* ── Stage 4: Confidence & Decision ───────────────────────── */}
+          <FlowStage number={4} label="Confidence & Decision Layer" description="Evaluates completeness, agent agreement, data quality, and compliance before routing">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+              {/* Confidence bar */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs text-hub-muted">0%</span>
+                  <span className="text-xs font-bold text-amber-700">70% Auto-send Threshold</span>
+                  <span className="text-xs text-hub-muted">100%</span>
+                </div>
+                <div className="relative h-4 bg-hub-bg rounded-full overflow-hidden border border-hub-border">
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-400 via-amber-400 to-green-400 rounded-full" />
+                  <div className="absolute top-0 bottom-0 left-[70%] w-0.5 bg-hub-text/60" />
+                  <div className="absolute top-0 bottom-0 left-[70%] -translate-x-8 flex items-center">
+                    <span className="text-[9px] text-hub-text/70 font-bold whitespace-nowrap"></span>
+                  </div>
+                </div>
+              </div>
+              {/* Criteria */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                {CONFIDENCE_CRITERIA.map((c) => (
+                  <div key={c} className="flex items-center gap-1.5 text-xs text-hub-text">
+                    <span className="text-amber-500 flex-shrink-0"><CheckSmIcon /></span>
+                    {c}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </FlowStage>
+
+          {/* ── Stage 5: Split paths ──────────────────────────────────── */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* 5a Auto-send */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
+                  5a
+                </div>
+                <span className="text-hub-text font-semibold text-sm">Auto-Send</span>
+                <span className="text-[10px] text-green-700 bg-green-100 border border-green-200 px-2 py-0.5 rounded-full font-semibold">
+                  ≥ 70% confidence
+                </span>
+              </div>
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
+                <OutputRow icon={<CheckCircleSmIcon color="green" />} text="Response sent via n8n to source channel" />
+                <OutputRow icon={<CheckCircleSmIcon color="green" />} text="Inquiry logged with full metadata" />
+                <OutputRow icon={<CheckCircleSmIcon color="green" />} text="Dashboard metrics updated in real time" />
+              </div>
+            </div>
+
+            {/* 5b Review Queue */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
+                  5b
+                </div>
+                <span className="text-hub-text font-semibold text-sm">Human Review Queue</span>
+                <span className="text-[10px] text-amber-700 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full font-semibold">
+                  &lt; 70% confidence
+                </span>
+              </div>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-2">
+                <OutputRow icon={<AlertSmIcon />} text="Flagged as low-confidence inside the platform" />
+                <OutputRow icon={<AlertSmIcon />} text="Human operator reviews the AI draft response" />
+                <OutputRow icon={<AlertSmIcon />} text="Can edit, enrich, or regenerate the answer" />
+              </div>
+            </div>
+          </div>
+
+          <FlowConnector label="Reviewed answers feed into" />
+
+          {/* ── Stage 6: Learning Loop ────────────────────────────────── */}
+          <FlowStage number={6} label="Learning Loop" description="Human corrections continuously improve the system's knowledge and future confidence scores">
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+              <div className="flex items-center gap-2 flex-wrap justify-center">
+                {LEARNING_STEPS.map((step, i) => (
+                  <>
+                    <div key={step.label} className="flex flex-col items-center gap-1 px-3 py-2 bg-white border border-purple-200 rounded-xl min-w-[90px]">
+                      <span className="text-purple-500">{step.icon}</span>
+                      <span className="text-[10px] font-semibold text-hub-text text-center leading-tight">{step.label}</span>
+                    </div>
+                    {i < LEARNING_STEPS.length - 1 && (
+                      <svg key={`arrow-${i}`} className="w-4 h-4 text-purple-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    )}
+                  </>
+                ))}
+              </div>
+              <p className="text-purple-700 text-[10px] text-center mt-2.5">
+                New rules, FAQ patterns, and fund-specific instructions are extracted and injected back into the agent knowledge bases
+              </p>
+            </div>
+          </FlowStage>
+
+          {/* ── Stage 7: Platform Logging ──────────────────────────────── */}
+          <div className="flex items-start gap-3 p-4 bg-hub-bg rounded-xl border border-hub-border">
+            <div className="w-6 h-6 rounded-full bg-hub-text flex items-center justify-center text-hub-bg text-[10px] font-bold flex-shrink-0 mt-0.5">
+              7
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <p className="text-hub-text font-semibold text-sm">Platform Logging</p>
+                <span className="text-[10px] text-hub-muted bg-hub-card border border-hub-border px-2 py-0.5 rounded-full">
+                  Every inquiry · Always
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {LOG_TAGS.map((tag) => (
+                  <span key={tag} className="text-[10px] bg-hub-card border border-hub-border px-2 py-0.5 rounded-full text-hub-muted">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      {/* ── METRICS ROW ─────────────────────────────────── */}
+      {/* ── METRICS ROW ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        <MetricCard
-          label="Total Inquiries"
-          value={MOCK_METRICS.total.toString()}
-          icon={<InboxIcon />}
-          sub={timeRange}
-        />
-        <MetricCard
-          label="Auto-sent"
-          value={`${MOCK_METRICS.autoSent}`}
-          sub={`${Math.round((MOCK_METRICS.autoSent / MOCK_METRICS.total) * 100)}% of total`}
-          icon={<CheckCircleIcon />}
-          accent
-        />
-        <MetricCard
-          label="Needs Review"
-          value={`${MOCK_METRICS.needsReview}`}
-          sub={`${Math.round((MOCK_METRICS.needsReview / MOCK_METRICS.total) * 100)}% of total`}
-          icon={<AlertIcon />}
-          warn
-        />
-        <MetricCard
-          label="Avg Confidence"
-          value={`${MOCK_METRICS.avgConfidence}%`}
-          sub="across all agents"
-          icon={<ShieldCheckIcon />}
-        />
-        <MetricCard
-          label="Avg Response"
-          value={`${MOCK_METRICS.avgResponseTime}s`}
-          sub="processing time"
-          icon={<ZapIcon />}
-        />
-        <MetricCard
-          label="Top Agent"
-          value={MOCK_METRICS.topAgent}
-          sub="most active today"
-          icon={<CpuIcon />}
-        />
+        <MetricCard label="Total Inquiries" value={MOCK_METRICS.total.toString()} icon={<InboxIcon />} sub={timeRange} />
+        <MetricCard label="Auto-sent" value={`${MOCK_METRICS.autoSent}`} sub={`${Math.round((MOCK_METRICS.autoSent / MOCK_METRICS.total) * 100)}% of total`} icon={<CheckCircleIcon />} accent />
+        <MetricCard label="Needs Review" value={`${MOCK_METRICS.needsReview}`} sub={`${Math.round((MOCK_METRICS.needsReview / MOCK_METRICS.total) * 100)}% of total`} icon={<AlertIcon />} warn />
+        <MetricCard label="Avg Confidence" value={`${MOCK_METRICS.avgConfidence}%`} sub="across all agents" icon={<ShieldCheckIcon />} />
+        <MetricCard label="Avg Response" value={`${MOCK_METRICS.avgResponseTime}s`} sub="processing time" icon={<ZapIcon />} />
+        <MetricCard label="Top Agent" value={MOCK_METRICS.topAgent} sub="most active today" icon={<CpuIcon />} />
       </div>
 
-      {/* ── BOTTOM ROW ──────────────────────────────────── */}
+      {/* ── BOTTOM ROW ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Confidence distribution */}
         <div className="bg-hub-card rounded-2xl border border-hub-border p-6">
-          <h3 className="text-hub-text font-semibold text-sm mb-4">
-            Confidence Distribution
-          </h3>
+          <h3 className="text-hub-text font-semibold text-sm mb-4">Confidence Distribution</h3>
           <div className="space-y-3">
             {MOCK_METRICS.confidenceBands.map((band) => (
               <div key={band.label} className="flex items-center gap-3">
-                <span className="text-hub-text text-xs w-16 flex-shrink-0">
-                  {band.label}
-                </span>
+                <span className="text-hub-text text-xs w-16 flex-shrink-0">{band.label}</span>
                 <div className="flex-1 bg-hub-bg rounded-full h-6 overflow-hidden">
                   <div
                     className="h-full rounded-full flex items-center px-2 transition-all duration-500"
-                    style={{
-                      width: `${(band.count / maxBand) * 100}%`,
-                      backgroundColor: band.color,
-                    }}
+                    style={{ width: `${(band.count / maxBand) * 100}%`, backgroundColor: band.color }}
                   >
-                    <span className="text-[11px] font-bold text-hub-sidebar whitespace-nowrap">
-                      {band.count}
-                    </span>
+                    <span className="text-[11px] font-bold text-hub-sidebar whitespace-nowrap">{band.count}</span>
                   </div>
                 </div>
-                <span
-                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
-                    band.auto
-                      ? "bg-green-100 text-green-700"
-                      : "bg-amber-100 text-amber-700"
-                  }`}
-                >
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${band.auto ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
                   {band.auto ? "Auto" : "Queue"}
                 </span>
               </div>
             ))}
           </div>
-
           <div className="mt-5 pt-4 border-t border-hub-border flex items-center gap-4 text-xs text-hub-muted">
-            <span>
-              <span className="font-semibold text-green-600">{MOCK_METRICS.autoSent}</span> auto-sent
-            </span>
+            <span><span className="font-semibold text-green-600">{MOCK_METRICS.autoSent}</span> auto-sent</span>
             <span>·</span>
-            <span>
-              <span className="font-semibold text-amber-600">{MOCK_METRICS.needsReview}</span> in review queue
-            </span>
+            <span><span className="font-semibold text-amber-600">{MOCK_METRICS.needsReview}</span> in review queue</span>
             <span>·</span>
             <span className="font-semibold text-hub-text">70% threshold</span>
           </div>
@@ -298,9 +358,7 @@ export default function DashboardView() {
 
         {/* Per channel */}
         <div className="bg-hub-card rounded-2xl border border-hub-border p-6">
-          <h3 className="text-hub-text font-semibold text-sm mb-4">
-            Per Channel
-          </h3>
+          <h3 className="text-hub-text font-semibold text-sm mb-4">Per Channel</h3>
           <div className="space-y-4">
             {MOCK_METRICS.channels.map((ch) => (
               <div key={ch.name}>
@@ -314,18 +372,8 @@ export default function DashboardView() {
                     {ch.name}
                   </span>
                   <div className="flex items-center gap-3">
-                    <span className="text-hub-muted text-xs">
-                      {ch.count} inquiries
-                    </span>
-                    <span
-                      className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                        ch.pct >= 85
-                          ? "bg-green-100 text-green-700"
-                          : ch.pct >= 75
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-orange-100 text-orange-700"
-                      }`}
-                    >
+                    <span className="text-hub-muted text-xs">{ch.count} inquiries</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${ch.pct >= 85 ? "bg-green-100 text-green-700" : ch.pct >= 75 ? "bg-amber-100 text-amber-700" : "bg-orange-100 text-orange-700"}`}>
                       {ch.pct}% auto
                     </span>
                   </div>
@@ -333,30 +381,16 @@ export default function DashboardView() {
                 <div className="w-full bg-hub-bg rounded-full h-2">
                   <div
                     className="h-2 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${ch.pct}%`,
-                      backgroundColor:
-                        ch.pct >= 85
-                          ? "#c8d432"
-                          : ch.pct >= 75
-                          ? "#f59e0b"
-                          : "#f97316",
-                    }}
+                    style={{ width: `${ch.pct}%`, backgroundColor: ch.pct >= 85 ? "#c8d432" : ch.pct >= 75 ? "#f59e0b" : "#f97316" }}
                   />
                 </div>
-                <p className="text-hub-muted text-[10px] mt-1">
-                  {ch.resolved} resolved · {ch.count - ch.resolved} in queue
-                </p>
+                <p className="text-hub-muted text-[10px] mt-1">{ch.resolved} resolved · {ch.count - ch.resolved} in queue</p>
               </div>
             ))}
           </div>
-
-          {/* Live indicator */}
           <div className="mt-5 pt-4 border-t border-hub-border flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse-soft" />
-            <span className="text-hub-muted text-xs">
-              Live — updates every 30s
-            </span>
+            <span className="text-hub-muted text-xs">Live — updates every 30s</span>
           </div>
         </div>
       </div>
@@ -364,17 +398,105 @@ export default function DashboardView() {
   );
 }
 
-function FlowArrow() {
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function FlowStage({
+  number,
+  label,
+  description,
+  children,
+}: {
+  number: number;
+  label: string;
+  description: string;
+  children: React.ReactNode;
+}) {
   return (
-    <svg
-      className="w-5 h-5 text-hub-muted flex-shrink-0"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-        d="M13 7l5 5m0 0l-5 5m5-5H6" />
-    </svg>
+    <div className="rounded-xl border border-hub-border bg-hub-bg/50 p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-6 h-6 rounded-full bg-hub-text flex items-center justify-center text-hub-bg text-[10px] font-bold flex-shrink-0">
+          {number}
+        </div>
+        <span className="text-hub-text font-semibold text-sm">{label}</span>
+        <span className="text-hub-muted text-xs hidden sm:inline">— {description}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function FlowConnector({ label }: { label: string }) {
+  return (
+    <div className="flex items-center justify-center gap-2 py-1">
+      <div className="w-px h-5 bg-hub-border" />
+      <svg className="w-4 h-4 text-hub-muted -mt-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    </div>
+  );
+}
+
+function ChannelCard({
+  icon,
+  name,
+  detail,
+  dot,
+}: {
+  icon: React.ReactNode;
+  name: string;
+  detail: string;
+  dot: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-hub-border bg-hub-card">
+      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
+      <span className="text-hub-muted flex-shrink-0">{icon}</span>
+      <div>
+        <p className="text-hub-text text-xs font-semibold">{name}</p>
+        <p className="text-hub-muted text-[10px]">{detail}</p>
+      </div>
+    </div>
+  );
+}
+
+const AGENT_COLORS: Record<string, string> = {
+  blue: "bg-blue-50 border-blue-200 text-blue-600",
+  indigo: "bg-indigo-50 border-indigo-200 text-indigo-600",
+  violet: "bg-violet-50 border-violet-200 text-violet-600",
+  cyan: "bg-cyan-50 border-cyan-200 text-cyan-600",
+  teal: "bg-teal-50 border-teal-200 text-teal-600",
+  emerald: "bg-emerald-50 border-emerald-200 text-emerald-600",
+};
+
+function AgentCard({
+  id,
+  name,
+  purpose,
+  color,
+}: {
+  id: string;
+  name: string;
+  purpose: string;
+  color: string;
+}) {
+  const cls = AGENT_COLORS[color] ?? AGENT_COLORS.blue;
+  return (
+    <div className={`rounded-xl border p-3 ${cls}`}>
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-[10px] font-bold opacity-60">{id}</span>
+        <p className="text-hub-text text-xs font-semibold leading-tight">{name}</p>
+      </div>
+      <p className="text-hub-muted text-[10px] leading-relaxed">{purpose}</p>
+    </div>
+  );
+}
+
+function OutputRow({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <div className="flex items-start gap-2">
+      <span className="flex-shrink-0 mt-0.5">{icon}</span>
+      <span className="text-hub-text text-xs">{text}</span>
+    </div>
   );
 }
 
@@ -394,15 +516,7 @@ function MetricCard({
   warn?: boolean;
 }) {
   return (
-    <div
-      className={`rounded-2xl border p-4 ${
-        accent
-          ? "bg-hub-accent/10 border-hub-accent/30"
-          : warn
-          ? "bg-amber-50 border-amber-200"
-          : "bg-hub-card border-hub-border"
-      }`}
-    >
+    <div className={`rounded-2xl border p-4 ${accent ? "bg-hub-accent/10 border-hub-accent/30" : warn ? "bg-amber-50 border-amber-200" : "bg-hub-card border-hub-border"}`}>
       <div className={`mb-2 ${accent ? "text-hub-accent-dark" : warn ? "text-amber-500" : "text-hub-muted"}`}>
         {icon}
       </div>
@@ -413,7 +527,16 @@ function MetricCard({
   );
 }
 
-// ── Icons ────────────────────────────────────────────────────────────────────
+// ── Icons ─────────────────────────────────────────────────────────────────────
+
+function BrainIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+    </svg>
+  );
+}
 
 function TicketIcon() {
   return (
@@ -442,38 +565,71 @@ function KeyIcon() {
   );
 }
 
-function BriefcaseIcon() {
+function CheckSmIcon() {
   return (
     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-        d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
     </svg>
   );
 }
 
-function UserIcon() {
+function CheckCircleSmIcon({ color }: { color: string }) {
   return (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    <svg className={`w-3.5 h-3.5 text-${color}-500`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   );
 }
 
-function QuestionIcon() {
+function AlertSmIcon() {
   return (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <svg className="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
     </svg>
   );
 }
 
-function DocumentIcon() {
+function PencilSmIcon() {
   return (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+    </svg>
+  );
+}
+
+function BrainSmIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+    </svg>
+  );
+}
+
+function SearchSmIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+  );
+}
+
+function DatabaseSmIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+    </svg>
+  );
+}
+
+function TrendingIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
     </svg>
   );
 }
@@ -481,8 +637,7 @@ function DocumentIcon() {
 function ZapIcon() {
   return (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-        d="M13 10V3L4 14h7v7l9-11h-7z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M13 10V3L4 14h7v7l9-11h-7z" />
     </svg>
   );
 }
@@ -510,15 +665,6 @@ function AlertIcon() {
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
         d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
-  );
-}
-
-function ClockIcon() {
-  return (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   );
 }

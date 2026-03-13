@@ -1,35 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-
-export interface KBFolder {
-  id: string;
-  areaId: string;
-  areaName: string;
-  name: string;
-  entry_count: number;
-  created_at: string;
-}
-
-const store: KBFolder[] = [
-  { id: "folder-sops", areaId: "investor-relations", areaName: "Investor Relations", name: "SOPs", entry_count: 0, created_at: new Date().toISOString() },
-  { id: "folder-templates", areaId: "investor-relations", areaName: "Investor Relations", name: "Templates", entry_count: 0, created_at: new Date().toISOString() },
-  { id: "folder-processes", areaId: "operations", areaName: "Operations", name: "Processes", entry_count: 0, created_at: new Date().toISOString() },
-  { id: "folder-onboarding", areaId: "client-success", areaName: "Client Success", name: "Onboarding", entry_count: 0, created_at: new Date().toISOString() },
-];
-
-export function adjustFolderCount(folderId: string, delta: number) {
-  const folder = store.find((f) => f.id === folderId);
-  if (folder) folder.entry_count = Math.max(0, folder.entry_count + delta);
-}
-
-export function getFolderById(id: string): KBFolder | undefined {
-  return store.find((f) => f.id === id);
-}
+import { folderStore, type KBFolder } from "@/lib/kb-store";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const areaId = searchParams.get("areaId");
-  const data = areaId ? store.filter((f) => f.areaId === areaId) : store;
-  return NextResponse.json({ data });
+  const areaId = searchParams.get("areaId") ?? undefined;
+  return NextResponse.json({ data: folderStore.list(areaId) });
 }
 
 export async function POST(req: NextRequest) {
@@ -45,14 +20,13 @@ export async function POST(req: NextRequest) {
     entry_count: 0,
     created_at: new Date().toISOString(),
   };
-  store.push(folder);
+  folderStore.add(folder);
   return NextResponse.json({ data: folder }, { status: 201 });
 }
 
 export async function DELETE(req: NextRequest) {
   const { id } = await req.json();
-  const idx = store.findIndex((f) => f.id === id);
-  if (idx === -1) return NextResponse.json({ error: "not found" }, { status: 404 });
-  store.splice(idx, 1);
+  const ok = folderStore.remove(id);
+  if (!ok) return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }
