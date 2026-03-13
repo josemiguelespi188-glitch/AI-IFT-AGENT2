@@ -405,7 +405,7 @@ export default function KnowledgeBaseView({ folder }: Props) {
             />
           ) : (
             <EditorPanel
-              mode={mode}
+              mode={mode as "edit" | "new"}
               type={mode === "new" ? newType : editType}
               title={editTitle}
               content={editContent}
