@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { entryStore, folderStore, type KBEntry, type KBEntryType } from "@/lib/kb-store";
+import { entryStore, type KBEntry, type KBEntryType } from "@/lib/kb-store";
 import { upsertKBEntry, deleteKBChunks } from "@/lib/pinecone";
+
+async function adjustFolderCount(folderId: string, delta: number) {
+  try {
+    await fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/kb/folders`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: folderId, delta }),
+    });
+  } catch {
+    // non-critical – entry_count is cosmetic
+  }
+}
 
 function buildEmbedText(
   entry: Pick<KBEntry, "type" | "content" | "question" | "answer" | "title">
@@ -70,7 +82,7 @@ export async function POST(req: NextRequest) {
   };
 
   entryStore.add(entry);
-  folderStore.adjustCount(folderId, 1);
+  adjustFolderCount(folderId, 1);
   return NextResponse.json({ data: entry }, { status: 201 });
 }
 
@@ -131,6 +143,6 @@ export async function DELETE(req: NextRequest) {
   }
 
   entryStore.remove(id);
-  folderStore.adjustCount(entry.folderId, -1);
+  adjustFolderCount(entry.folderId, -1);
   return NextResponse.json({ ok: true });
 }

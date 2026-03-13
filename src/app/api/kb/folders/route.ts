@@ -1,33 +1,112 @@
 import { NextRequest, NextResponse } from "next/server";
-import { folderStore, type KBFolder } from "@/lib/kb-store";
+import { createServerClient } from "@/lib/supabase";
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+function db() {
+  return createServerClient();
+}
+
+// ── GET /api/kb/folders ───────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const parentId = searchParams.get("parentId"); // "null" → root only, omit → all
-  if (parentId === "null") return NextResponse.json({ data: folderStore.list(null) });
-  if (parentId) return NextResponse.json({ data: folderStore.list(parentId) });
-  return NextResponse.json({ data: folderStore.list() });
+  const parentId = searchParams.get("parentId"); // "null" → root only
+
+  try {
+    let query = db().from("kb_folders").select("*").order("created_at", { ascending: true });
+
+    if (parentId === "null") {
+      query = query.is("parent_id", null);
+    } else if (parentId) {
+      query = query.eq("parent_id", parentId);
+    }
+    // if no parentId param → return all folders
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return NextResponse.json({ data: data ?? [] });
+  } catch (err) {
+    console.error("[kb/folders] GET error:", err);
+    return NextResponse.json({ data: [] });
+  }
 }
 
+// ── POST /api/kb/folders ──────────────────────────────────────────────────────
+
 export async function POST(req: NextRequest) {
-  const { name, parentId } = await req.json();
+  const body = await req.json();
+  const { name, parentId } = body;
+
   if (!name?.trim()) {
     return NextResponse.json({ error: "name required" }, { status: 400 });
   }
-  const folder: KBFolder = {
-    id: `folder-${Date.now()}`,
-    parentId: parentId ?? undefined,
-    name: name.trim(),
-    entry_count: 0,
-    created_at: new Date().toISOString(),
-  };
-  folderStore.add(folder);
-  return NextResponse.json({ data: folder }, { status: 201 });
+
+  try {
+    const insert: Record<string, unknown> = {
+      name: (name as string).trim(),
+      entry_count: 0,
+    };
+    if (parentId) insert.parent_id = parentId;
+
+    const { data, error } = await db()
+      .from("kb_folders")
+      .insert(insert)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return NextResponse.json({ data }, { status: 201 });
+  } catch (err) {
+    console.error("[kb/folders] POST error:", err);
+    return NextResponse.json({ error: "Failed to create folder" }, { status: 500 });
+  }
 }
+
+// ── DELETE /api/kb/folders ────────────────────────────────────────────────────
 
 export async function DELETE(req: NextRequest) {
   const { id } = await req.json();
-  const ok = folderStore.remove(id);
-  if (!ok) return NextResponse.json({ error: "not found" }, { status: 404 });
-  return NextResponse.json({ ok: true });
+
+  try {
+    // Cascade delete removes subfolders automatically (FK ON DELETE CASCADE)
+    const { error } = await db()
+      .from("kb_folders")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[kb/folders] DELETE error:", err);
+    return NextResponse.json({ error: "Failed to delete folder" }, { status: 500 });
+  }
+}
+
+// ── PATCH /api/kb/folders (update entry_count) ────────────────────────────────
+
+export async function PATCH(req: NextRequest) {
+  const { id, delta } = await req.json();
+
+  try {
+    // Read current count, apply delta
+    const { data: current } = await db()
+      .from("kb_folders")
+      .select("entry_count")
+      .eq("id", id)
+      .single();
+
+    const newCount = Math.max(0, ((current?.entry_count as number) ?? 0) + (delta as number));
+
+    const { error } = await db()
+      .from("kb_folders")
+      .update({ entry_count: newCount })
+      .eq("id", id);
+
+    if (error) throw error;
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[kb/folders] PATCH error:", err);
+    return NextResponse.json({ error: "Failed to update count" }, { status: 500 });
+  }
 }

@@ -96,11 +96,11 @@ export default function Sidebar({
               <span className="text-hub-sidebar text-xs font-bold">IFT</span>
             </div>
             <span className="text-hub-sidebar-text font-bold text-sm">
-              Industry FinTech
+              IFT IA AGENTS
             </span>
           </div>
           <p className="text-hub-sidebar-muted text-xs mt-1 ml-10">
-            Knowledge Hub
+            AI Inquiry Platform
           </p>
         </div>
       </div>
