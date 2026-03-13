@@ -36,8 +36,6 @@ interface SearchResult {
 export interface ActiveKBFolder {
   folderId: string;
   folderName: string;
-  areaId: string;
-  areaName: string;
 }
 
 interface Props {
@@ -126,8 +124,6 @@ export default function KnowledgeBaseView({ folder }: Props) {
           body: JSON.stringify({
             folderId: folder.folderId,
             folderName: folder.folderName,
-            areaId: folder.areaId,
-            areaName: folder.areaName,
             title: editTitle,
             type: editType,
             content: editContent,
@@ -195,7 +191,6 @@ export default function KnowledgeBaseView({ folder }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: searchQuery,
-          area: folder.areaName,
           folder: folder.folderName,
           topK: 5,
         }),
@@ -238,9 +233,6 @@ export default function KnowledgeBaseView({ folder }: Props) {
         <div className="px-5 py-4 border-b border-hub-border bg-hub-card">
           {/* Breadcrumb */}
           <div className="flex items-center gap-1.5 text-xs text-hub-muted mb-2">
-            <BuildingIcon />
-            <span>{folder.areaName}</span>
-            <span>/</span>
             <FolderOpenIcon />
             <span className="text-hub-text font-medium">{folder.folderName}</span>
           </div>
@@ -765,14 +757,6 @@ function relativeTime(iso: string): string {
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
-function BuildingIcon() {
-  return (
-    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-    </svg>
-  );
-}
 
 function FolderOpenIcon() {
   return (

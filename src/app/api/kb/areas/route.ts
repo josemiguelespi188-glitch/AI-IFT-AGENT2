@@ -1,27 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { areaStore, type KBArea } from "@/lib/kb-store";
+import { NextResponse } from "next/server";
+
+// Areas are no longer used — KB structure is folders + subfolders only.
+// This endpoint is kept for backward compatibility but returns an empty list.
 
 export async function GET() {
-  return NextResponse.json({ data: areaStore.list() });
+  return NextResponse.json({ data: [] });
 }
 
-export async function POST(req: NextRequest) {
-  const { name } = await req.json();
-  if (!name?.trim()) {
-    return NextResponse.json({ error: "name required" }, { status: 400 });
-  }
-  const area: KBArea = {
-    id: `area-${Date.now()}`,
-    name: name.trim(),
-    created_at: new Date().toISOString(),
-  };
-  areaStore.add(area);
-  return NextResponse.json({ data: area }, { status: 201 });
+export async function POST() {
+  return NextResponse.json({ error: "Areas have been replaced by folders" }, { status: 410 });
 }
 
-export async function DELETE(req: NextRequest) {
-  const { id } = await req.json();
-  const ok = areaStore.remove(id);
-  if (!ok) return NextResponse.json({ error: "not found" }, { status: 404 });
+export async function DELETE() {
   return NextResponse.json({ ok: true });
 }

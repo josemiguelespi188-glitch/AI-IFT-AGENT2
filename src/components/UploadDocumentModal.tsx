@@ -43,10 +43,26 @@ export default function UploadDocumentModal({
     addFiles(e.dataTransfer.files);
   };
 
+  const readAsText = (file: File): Promise<string | null> =>
+    new Promise((resolve) => {
+      // Only attempt text extraction for text-based MIME types
+      const isText =
+        file.type.startsWith("text/") ||
+        file.type === "application/json" ||
+        file.type === "application/xml" ||
+        file.name.match(/\.(txt|md|csv|json|xml|yaml|yml|log|ts|tsx|js|jsx|py|java|cs|go|rs|sql)$/i);
+      if (!isText) { resolve(null); return; }
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsText(file);
+    });
+
   const handleUpload = async () => {
     if (files.length === 0 || !folderId) return;
     setUploading(true);
     for (const file of files) {
+      const content = await readAsText(file);
       await fetch("/api/documents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -55,6 +71,7 @@ export default function UploadDocumentModal({
           folder_id: folderId,
           size: file.size,
           type: file.type || "application/octet-stream",
+          content: content ?? undefined,
         }),
       });
     }

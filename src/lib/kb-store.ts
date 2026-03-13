@@ -1,52 +1,31 @@
 // Shared in-memory stores for the KB API routes.
 // Route files can only export HTTP handlers — all shared state lives here.
 
-// ── Areas ─────────────────────────────────────────────────────────────────────
-
-export interface KBArea {
-  id: string;
-  name: string;
-  created_at: string;
-}
-
-const areas: KBArea[] = [
-  { id: "investor-relations", name: "Investor Relations", created_at: new Date().toISOString() },
-  { id: "operations", name: "Operations", created_at: new Date().toISOString() },
-  { id: "client-success", name: "Client Success", created_at: new Date().toISOString() },
-];
-
-export const areaStore = {
-  list: () => areas,
-  add: (area: KBArea) => areas.push(area),
-  remove: (id: string) => {
-    const idx = areas.findIndex((a) => a.id === id);
-    if (idx !== -1) areas.splice(idx, 1);
-    return idx !== -1;
-  },
-};
-
 // ── Folders ───────────────────────────────────────────────────────────────────
 
 export interface KBFolder {
   id: string;
-  areaId: string;
-  areaName: string;
+  parentId?: string;  // undefined = top-level folder; set = subfolder
   name: string;
   entry_count: number;
   created_at: string;
 }
 
 const folders: KBFolder[] = [
-  { id: "folder-sops", areaId: "investor-relations", areaName: "Investor Relations", name: "SOPs", entry_count: 0, created_at: new Date().toISOString() },
-  { id: "folder-templates", areaId: "investor-relations", areaName: "Investor Relations", name: "Templates", entry_count: 0, created_at: new Date().toISOString() },
-  { id: "folder-processes", areaId: "operations", areaName: "Operations", name: "Processes", entry_count: 0, created_at: new Date().toISOString() },
-  { id: "folder-onboarding", areaId: "client-success", areaName: "Client Success", name: "Onboarding", entry_count: 0, created_at: new Date().toISOString() },
+  { id: "folder-sops", name: "SOPs", entry_count: 0, created_at: new Date().toISOString() },
+  { id: "folder-templates", name: "Templates", entry_count: 0, created_at: new Date().toISOString() },
+  { id: "folder-processes", name: "Processes", entry_count: 0, created_at: new Date().toISOString() },
+  { id: "folder-onboarding", name: "Onboarding", entry_count: 0, created_at: new Date().toISOString() },
 ];
 
 export const folderStore = {
-  list: (areaId?: string) =>
-    areaId ? folders.filter((f) => f.areaId === areaId) : folders,
+  list: (parentId?: string | null) => {
+    if (parentId === null) return folders.filter((f) => !f.parentId); // root only
+    if (parentId !== undefined) return folders.filter((f) => f.parentId === parentId);
+    return folders; // all
+  },
   add: (folder: KBFolder) => folders.push(folder),
+  find: (id: string) => folders.find((f) => f.id === id),
   remove: (id: string) => {
     const idx = folders.findIndex((f) => f.id === id);
     if (idx !== -1) folders.splice(idx, 1);
@@ -66,8 +45,6 @@ export interface KBEntry {
   id: string;
   folderId: string;
   folderName: string;
-  areaId: string;
-  areaName: string;
   title: string;
   type: KBEntryType;
   content: string;

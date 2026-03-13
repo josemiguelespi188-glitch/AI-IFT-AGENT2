@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { folderId, folderName, areaId, areaName, title, type, content, question, answer } = body;
+  const { folderId, folderName, title, type, content, question, answer } = body;
 
   if (!folderId || !title?.trim()) {
     return NextResponse.json({ error: "folderId and title required" }, { status: 400 });
@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
     chunkIds = await upsertKBEntry({
       entryId: id,
       text: buildEmbedText(partialEntry),
-      area: areaName,
-      folder: folderName,
+      area: folderName ?? folderId,
+      folder: folderName ?? folderId,
       title: partialEntry.title,
     });
     synced = true;
@@ -56,9 +56,7 @@ export async function POST(req: NextRequest) {
   const entry: KBEntry = {
     id,
     folderId,
-    folderName,
-    areaId,
-    areaName,
+    folderName: folderName ?? "",
     title: partialEntry.title,
     type: partialEntry.type,
     content: partialEntry.content,
@@ -103,7 +101,7 @@ export async function PUT(req: NextRequest) {
     newChunkIds = await upsertKBEntry({
       entryId: id,
       text: buildEmbedText(entry),
-      area: entry.areaName,
+      area: entry.folderName,
       folder: entry.folderName,
       title: entry.title,
     });

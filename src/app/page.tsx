@@ -9,10 +9,12 @@ import UnansweredTicketsView from "@/components/UnansweredTicketsView";
 import AgentsView from "@/components/AgentsView";
 import IntegrationsView from "@/components/IntegrationsView";
 import KnowledgeBaseView from "@/components/KnowledgeBaseView";
+import HowItWorksView from "@/components/HowItWorksView";
 import type { ActiveKBFolder } from "@/components/KnowledgeBaseView";
 
 export type ActiveView =
   | "dashboard"
+  | "how-it-works"
   | "ai-agents"
   | "ai-assistant"
   | "unanswered-tickets"
@@ -38,6 +40,8 @@ export default function HomePage() {
 
       <div className="flex-1 overflow-auto flex flex-col min-h-0">
         {activeView === "dashboard" && <DashboardView />}
+
+        {activeView === "how-it-works" && <HowItWorksView />}
 
         {activeView === "ai-agents" && <AgentsView />}
 

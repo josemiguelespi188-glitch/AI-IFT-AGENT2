@@ -3,19 +3,20 @@ import { folderStore, type KBFolder } from "@/lib/kb-store";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const areaId = searchParams.get("areaId") ?? undefined;
-  return NextResponse.json({ data: folderStore.list(areaId) });
+  const parentId = searchParams.get("parentId"); // "null" → root only, omit → all
+  if (parentId === "null") return NextResponse.json({ data: folderStore.list(null) });
+  if (parentId) return NextResponse.json({ data: folderStore.list(parentId) });
+  return NextResponse.json({ data: folderStore.list() });
 }
 
 export async function POST(req: NextRequest) {
-  const { name, areaId, areaName } = await req.json();
-  if (!name?.trim() || !areaId) {
-    return NextResponse.json({ error: "name and areaId required" }, { status: 400 });
+  const { name, parentId } = await req.json();
+  if (!name?.trim()) {
+    return NextResponse.json({ error: "name required" }, { status: 400 });
   }
   const folder: KBFolder = {
     id: `folder-${Date.now()}`,
-    areaId,
-    areaName: areaName ?? areaId,
+    parentId: parentId ?? undefined,
     name: name.trim(),
     entry_count: 0,
     created_at: new Date().toISOString(),
