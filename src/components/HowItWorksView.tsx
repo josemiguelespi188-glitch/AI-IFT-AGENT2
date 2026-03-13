@@ -299,24 +299,33 @@ function WorkflowDiagram() {
             </marker>
           </defs>
 
-          {/* Inputs → Master */}
+          {/* ── Inputs → Master (merge at x=270, then to Master left) ── */}
+          {/* Zendesk straight to Master */}
           <line x1="180" y1="68" x2="430" y2="68" stroke="#94a3b8" strokeWidth="1.5" markerEnd="url(#arr-neutral)" />
+          {/* Email up to y=68 via merge point */}
           <line x1="180" y1="108" x2="270" y2="108" stroke="#94a3b8" strokeWidth="1.5" />
-          <line x1="270" y1="108" x2="270" y2="68" stroke="#94a3b8" strokeWidth="1.5" />
-          <line x1="180" y1="148" x2="270" y2="148" stroke="#94a3b8" strokeWidth="1.5" />
-          <line x1="270" y1="148" x2="270" y2="68" stroke="#94a3b8" strokeWidth="1.5" />
+          <line x1="270" y1="108" x2="270" y2="72" stroke="#94a3b8" strokeWidth="1.5" />
+          <line x1="270" y1="72" x2="430" y2="72" stroke="#94a3b8" strokeWidth="1.5" markerEnd="url(#arr-neutral)" />
+          {/* AxisKey */}
+          <line x1="180" y1="148" x2="262" y2="148" stroke="#94a3b8" strokeWidth="1.5" />
+          <line x1="262" y1="148" x2="262" y2="76" stroke="#94a3b8" strokeWidth="1.5" />
+          <line x1="262" y1="76" x2="430" y2="76" stroke="#94a3b8" strokeWidth="1.5" markerEnd="url(#arr-neutral)" />
 
-          {/* Master → Agents */}
-          <line x1="530" y1="68" x2="530" y2="95" stroke="#94a3b8" strokeWidth="1.5" />
-          <line x1="530" y1="95" x2="120" y2="95" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="4 3" />
-          <line x1="120" y1="95" x2="120" y2="200" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="4 3" />
-          {[155, 305, 455, 605, 755, 905].map((x) => (
-            <line key={x} x1="120" y1="200" x2={x} y2="215" stroke="#94a3b8" strokeWidth="1.5" markerEnd="url(#arr-neutral)" />
+          {/* ── Master → Agents: vertical stem + horizontal bus + drops ── */}
+          {/* Stem down from Master bottom-center */}
+          <line x1="530" y1="94" x2="530" y2="158" stroke="#94a3b8" strokeWidth="2" />
+          {/* Horizontal distribution bus */}
+          <line x1="80" y1="158" x2="830" y2="158" stroke="#94a3b8" strokeWidth="2" />
+          {/* Bus label */}
+          <text x="530" y="152" textAnchor="middle" fontSize="7" fill="#94a3b8" fontWeight="600">Dispatch in parallel</text>
+          {/* Vertical drops from bus to each agent top */}
+          {[80, 230, 380, 530, 680, 830].map((x) => (
+            <line key={x} x1={x} y1="158" x2={x} y2="213" stroke="#64748b" strokeWidth="1.5" markerEnd="url(#arr-neutral)" />
           ))}
 
-          {/* Agents → Confidence */}
-          {[155, 305, 455, 605, 755, 905].map((x) => (
-            <line key={x} x1={x} y1="272" x2="530" y2="300" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 2" markerEnd="url(#arr-neutral)" />
+          {/* Agents → Confidence: converge lines from each agent bottom */}
+          {[80, 230, 380, 530, 680, 830].map((x) => (
+            <line key={x} x1={x} y1="272" x2="530" y2="298" stroke="#64748b" strokeWidth="1" strokeDasharray="3 2" markerEnd="url(#arr-neutral)" />
           ))}
 
           {/* Confidence → Auto-send */}
@@ -357,22 +366,22 @@ function WorkflowDiagram() {
           <text x="530" y="76" textAnchor="middle" fontSize="8" fill="#4d7c0f">n8n Orchestration Engine</text>
           <text x="530" y="88" textAnchor="middle" fontSize="7.5" fill="#84cc16">Classifies · Extracts · Delegates</text>
 
-          {/* Specialist Agents */}
+          {/* Specialist Agents — centered at x=80,230,380,530,680,830 */}
           {[
-            { x: 80, label: "A1", name: "Investor\nIdentity", fill: "#eff6ff", stroke: "#93c5fd", text: "#1d4ed8" },
-            { x: 230, label: "A2", name: "Client\n& Fund", fill: "#eef2ff", stroke: "#a5b4fc", text: "#4338ca" },
-            { x: 380, label: "A3", name: "FAQ &\nCases", fill: "#f5f3ff", stroke: "#c4b5fd", text: "#6d28d9" },
-            { x: 530, label: "A4", name: "Knowledge\nRetrieval", fill: "#ecfeff", stroke: "#67e8f9", text: "#0e7490" },
-            { x: 680, label: "A5", name: "Response\nPolicy", fill: "#f0fdfa", stroke: "#6ee7b7", text: "#065f46" },
-            { x: 830, label: "A6", name: "Channel\nFormat", fill: "#f0fdf4", stroke: "#86efac", text: "#166534" },
+            { x: 80,  label: "A1", name: "Investor\nIdentity",  fill: "#eff6ff", stroke: "#93c5fd", text: "#1d4ed8" },
+            { x: 230, label: "A2", name: "Client\n& Fund",      fill: "#eef2ff", stroke: "#a5b4fc", text: "#4338ca" },
+            { x: 380, label: "A3", name: "FAQ &\nCases",        fill: "#f5f3ff", stroke: "#c4b5fd", text: "#6d28d9" },
+            { x: 530, label: "A4", name: "Knowledge\nRetrieval",fill: "#ecfeff", stroke: "#67e8f9", text: "#0e7490" },
+            { x: 680, label: "A5", name: "Response\nPolicy",    fill: "#f0fdfa", stroke: "#6ee7b7", text: "#065f46" },
+            { x: 830, label: "A6", name: "Channel\nFormat",     fill: "#f0fdf4", stroke: "#86efac", text: "#166534" },
           ].map(({ x, label, name, fill, stroke, text }) => {
             const lines = name.split("\n");
             return (
               <g key={label}>
-                <rect x={x - 65} y="215" width="130" height="57" rx="8" fill={fill} stroke={stroke} strokeWidth="1.5" />
-                <text x={x} y="231" textAnchor="middle" fontSize="8" fontWeight="700" fill={text} opacity="0.6">{label}</text>
-                <text x={x} y="244" textAnchor="middle" fontSize="9" fontWeight="700" fill="#1e293b">{lines[0]}</text>
-                {lines[1] && <text x={x} y="257" textAnchor="middle" fontSize="9" fontWeight="700" fill="#1e293b">{lines[1]}</text>}
+                <rect x={x - 60} y="213" width="120" height="59" rx="8" fill={fill} stroke={stroke} strokeWidth="1.5" />
+                <text x={x} y="228" textAnchor="middle" fontSize="8" fontWeight="700" fill={text} opacity="0.7">{label}</text>
+                <text x={x} y="242" textAnchor="middle" fontSize="9" fontWeight="700" fill="#1e293b">{lines[0]}</text>
+                {lines[1] && <text x={x} y="256" textAnchor="middle" fontSize="9" fontWeight="700" fill="#1e293b">{lines[1]}</text>}
               </g>
             );
           })}
