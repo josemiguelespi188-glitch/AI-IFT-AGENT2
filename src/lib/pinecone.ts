@@ -160,6 +160,7 @@ function chunkText(text: string): string[] {
 
 /**
  * Vectorize a KB entry as overlapping chunks, upsert all to Pinecone.
+ * Pass namespace (folder ID) to isolate vectors per folder/subfolder.
  * Returns the list of vector IDs created (needed for future deletion).
  */
 export async function upsertKBEntry(entry: {
@@ -168,9 +169,15 @@ export async function upsertKBEntry(entry: {
   area: string;
   folder: string;
   title: string;
+  namespace?: string; // folder ID — scopes vectors to that folder's namespace
 }): Promise<string[]> {
   const pc = getPineconeClient();
-  const index = pc.Index(INDEX_NAME);
+  const baseIndex = pc.Index(INDEX_NAME);
+  // Use folder-scoped namespace when provided, fall back to shared index
+  const index = entry.namespace
+    ? baseIndex.namespace(entry.namespace)
+    : baseIndex;
+
   const chunks = chunkText(entry.text);
   const chunkIds: string[] = [];
 
@@ -187,6 +194,7 @@ export async function upsertKBEntry(entry: {
           entry_id: entry.entryId,
           area: entry.area,
           folder: entry.folder,
+          folder_namespace: entry.namespace ?? "",
           title: entry.title,
           content_preview: chunks[i].slice(0, 512),
           chunk_index: i,
@@ -203,11 +211,13 @@ export async function upsertKBEntry(entry: {
 
 /**
  * Delete a set of KB chunk vectors from Pinecone by their IDs.
+ * Provide the same namespace used during upsert to target the right scope.
  */
-export async function deleteKBChunks(chunkIds: string[]): Promise<void> {
+export async function deleteKBChunks(chunkIds: string[], namespace?: string): Promise<void> {
   if (chunkIds.length === 0) return;
   const pc = getPineconeClient();
-  const index = pc.Index(INDEX_NAME);
+  const baseIndex = pc.Index(INDEX_NAME);
+  const index = namespace ? baseIndex.namespace(namespace) : baseIndex;
   await index.deleteMany(chunkIds);
 }
 
@@ -222,15 +232,17 @@ export interface KBSearchResult {
 }
 
 /**
- * Semantic search over KB chunks. Filters by area/folder if provided.
+ * Semantic search over KB chunks. Filters by area/folder/namespace if provided.
+ * Pass namespace (folder ID) to search only within a specific folder's vectors.
  * De-duplicates by entryId, keeping the highest-scoring chunk per entry.
  */
 export async function searchKBEntries(
   query: string,
-  options: { area?: string; folder?: string; topK?: number } = {}
+  options: { area?: string; folder?: string; topK?: number; namespace?: string } = {}
 ): Promise<KBSearchResult[]> {
   const pc = getPineconeClient();
-  const index = pc.Index(INDEX_NAME);
+  const baseIndex = pc.Index(INDEX_NAME);
+  const index = options.namespace ? baseIndex.namespace(options.namespace) : baseIndex;
   const embedding = await generateEmbedding(query);
 
   const filter: Record<string, unknown> = { record_type: "kb_chunk" };

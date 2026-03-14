@@ -24,7 +24,16 @@ export async function GET(req: NextRequest) {
     // if no parentId param → return all folders
 
     const { data, error } = await query;
-    if (error) throw error;
+    if (error) {
+      // Detect "table does not exist" error (PostgreSQL code 42P01)
+      const isTableMissing =
+        (error as { code?: string }).code === "42P01" ||
+        error.message?.toLowerCase().includes("does not exist");
+      if (isTableMissing) {
+        return NextResponse.json({ data: [], setup_required: true });
+      }
+      throw error;
+    }
     return NextResponse.json({ data: data ?? [] });
   } catch (err) {
     console.error("[kb/folders] GET error:", err);

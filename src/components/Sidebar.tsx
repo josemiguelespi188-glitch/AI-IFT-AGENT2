@@ -28,15 +28,36 @@ export default function Sidebar({
 }: Props) {
   const [folders, setFolders] = useState<KBFolder[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [setupRequired, setSetupRequired] = useState(false);
+  const [folderError, setFolderError] = useState<string | null>(null);
+  const [sqlCopied, setSqlCopied] = useState(false);
 
   // Inline create states
   const [newFolderParentId, setNewFolderParentId] = useState<string | null | "root">(null);
   const [newFolderName, setNewFolderName] = useState("");
 
+  const SETUP_SQL = `CREATE TABLE IF NOT EXISTS kb_folders (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  parent_id  UUID REFERENCES kb_folders(id) ON DELETE CASCADE,
+  name       TEXT NOT NULL,
+  entry_count INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE kb_folders ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "allow_all_service_role" ON kb_folders
+  FOR ALL USING (true) WITH CHECK (true);`;
+
   const fetchFolders = useCallback(async () => {
     const res = await fetch("/api/kb/folders");
     const json = await res.json();
-    if (json.data) setFolders(json.data);
+    if (json.setup_required) {
+      setSetupRequired(true);
+      return;
+    }
+    if (json.data) {
+      setSetupRequired(false);
+      setFolders(json.data);
+    }
   }, []);
 
   useEffect(() => { fetchFolders(); }, [fetchFolders]);
@@ -45,6 +66,7 @@ export default function Sidebar({
 
   const handleAddFolder = async (parentId?: string) => {
     if (!newFolderName.trim()) return;
+    setFolderError(null);
     const res = await fetch("/api/kb/folders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -52,11 +74,13 @@ export default function Sidebar({
     });
     const json = await res.json();
     if (json.data) {
-      setFolders((prev) => [...prev, json.data]);
+      setFolders((prev) => [...prev, { ...json.data, parentId: json.data.parent_id }]);
       if (parentId) setExpanded((prev) => ({ ...prev, [parentId]: true }));
+      setNewFolderParentId(null);
+      setNewFolderName("");
+    } else {
+      setFolderError(json.error ?? "Failed to create folder");
     }
-    setNewFolderParentId(null);
-    setNewFolderName("");
   };
 
   const handleDeleteFolder = async (folderId: string) => {
@@ -173,6 +197,36 @@ export default function Sidebar({
             <PlusIcon />
           </button>
         </div>
+
+        {/* Setup required banner */}
+        {setupRequired && (
+          <div className="mt-1 mb-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5">
+            <p className="text-amber-400 text-[10px] font-semibold mb-1.5">⚠ Database setup required</p>
+            <p className="text-hub-sidebar-muted text-[9px] leading-relaxed mb-2">
+              Run this SQL in your Supabase SQL Editor to enable folders:
+            </p>
+            <pre className="text-[8px] text-hub-sidebar-muted bg-black/30 rounded p-1.5 overflow-x-auto whitespace-pre-wrap break-all leading-relaxed mb-2">
+              {SETUP_SQL}
+            </pre>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(SETUP_SQL);
+                setSqlCopied(true);
+                setTimeout(() => setSqlCopied(false), 2000);
+              }}
+              className="w-full text-[9px] font-semibold py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 transition-colors"
+            >
+              {sqlCopied ? "✓ Copied!" : "Copy SQL"}
+            </button>
+          </div>
+        )}
+
+        {/* Folder creation error */}
+        {folderError && (
+          <div className="mx-1 mb-2 px-2 py-1.5 rounded bg-red-500/15 border border-red-500/25">
+            <p className="text-red-400 text-[9px]">{folderError}</p>
+          </div>
+        )}
 
         {/* Root folders */}
         {rootFolders.map((folder) => {

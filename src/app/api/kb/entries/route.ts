@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
       area: folderName ?? folderId,
       folder: folderName ?? folderId,
       title: partialEntry.title,
+      namespace: folderId, // scope vectors to this folder's Pinecone namespace
     });
     synced = true;
   } catch (err) {
@@ -95,7 +96,7 @@ export async function PUT(req: NextRequest) {
 
   if (entry.chunkIds.length > 0) {
     try {
-      await deleteKBChunks(entry.chunkIds);
+      await deleteKBChunks(entry.chunkIds, entry.folderId);
     } catch (err) {
       console.error("[kb/entries] delete old chunks error:", err);
     }
@@ -116,6 +117,7 @@ export async function PUT(req: NextRequest) {
       area: entry.folderName,
       folder: entry.folderName,
       title: entry.title,
+      namespace: entry.folderId,
     });
     synced = true;
   } catch (err) {
@@ -136,7 +138,7 @@ export async function DELETE(req: NextRequest) {
 
   if (entry.chunkIds.length > 0) {
     try {
-      await deleteKBChunks(entry.chunkIds);
+      await deleteKBChunks(entry.chunkIds, entry.folderId);
     } catch (err) {
       console.error("[kb/entries] delete chunks error:", err);
     }

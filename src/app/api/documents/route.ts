@@ -79,6 +79,7 @@ export async function POST(req: NextRequest) {
   };
 
   // Vectorize to Pinecone if text content is provided
+  // Uses folder_id as Pinecone namespace to scope vectors per folder
   if (body.content && typeof body.content === "string" && body.content.trim()) {
     try {
       const chunkIds = await upsertKBEntry({
@@ -87,6 +88,7 @@ export async function POST(req: NextRequest) {
         area: folder?.name ?? "Documents",
         folder: folder?.name ?? "Documents",
         title: body.name,
+        namespace: body.folder_id ?? undefined,
       });
       doc.chunkIds = chunkIds;
       doc.synced = true;
@@ -109,14 +111,14 @@ export async function DELETE(req: NextRequest) {
     // Delete Pinecone chunks for all docs in folder
     const folderDocs = documents.filter((d) => d.folder_id === id && d.chunkIds.length > 0);
     for (const doc of folderDocs) {
-      try { await deleteKBChunks(doc.chunkIds); } catch {}
+      try { await deleteKBChunks(doc.chunkIds, doc.folder_id); } catch {}
     }
     folders = folders.filter((f) => f.id !== id);
     documents = documents.filter((d) => d.folder_id !== id);
   } else {
     const doc = documents.find((d) => d.id === id);
     if (doc?.chunkIds.length) {
-      try { await deleteKBChunks(doc.chunkIds); } catch {}
+      try { await deleteKBChunks(doc.chunkIds, doc.folder_id); } catch {}
     }
     documents = documents.filter((d) => d.id !== id);
   }
