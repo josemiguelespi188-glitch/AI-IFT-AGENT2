@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["openai", "pdf-parse"],
+  serverExternalPackages: ["openai"],
 };
 
 export default nextConfig;

@@ -5,6 +5,9 @@ import { NextRequest, NextResponse } from "next/server";
  * Accepts a multipart/form-data upload with a single "file" field.
  * Supported types: .txt, .md, .pdf
  * Returns { text, filename, size } — caller then POSTs to /api/kb/entries.
+ *
+ * Uses `unpdf` for PDF parsing — designed for serverless / Next.js App Router
+ * environments. Avoids the filesystem access issues of pdf-parse / pdfjs-dist.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -29,15 +32,13 @@ export async function POST(req: NextRequest) {
     let text = "";
 
     if (ext === "pdf") {
-      // Use the internal pdf-parse module to avoid the test-file loader
-      // that runs at import time and crashes in Next.js server environments.
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const pdfParse = require("pdf-parse/lib/pdf-parse");
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const parsed = await pdfParse(buffer);
-      text = parsed.text ?? "";
+      const { getDocumentProxy, extractText } = await import("unpdf");
+      const buffer = await file.arrayBuffer();
+      const pdf = await getDocumentProxy(new Uint8Array(buffer));
+      const result = await extractText(pdf, { mergePages: true });
+      // With mergePages:true, result.text is always a joined string
+      text = result.text as string;
     } else {
-      // txt / md — plain text
       text = await file.text();
     }
 
@@ -58,7 +59,11 @@ export async function POST(req: NextRequest) {
       charCount: text.length,
     });
   } catch (err) {
-    console.error("[kb/upload] error:", err);
-    return NextResponse.json({ error: "Failed to process file" }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[kb/upload] error:", message);
+    return NextResponse.json(
+      { error: `Failed to process file: ${message}` },
+      { status: 500 }
+    );
   }
 }
