@@ -11,10 +11,12 @@
   "dependencies": {
     "@pinecone-database/pinecone": "^3.0.0",
     "@supabase/supabase-js": "^2.45.0",
+    "@types/pdf-parse": "^1.1.5",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.462.0",
     "next": "15.1.12",
     "openai": "^6.27.0",
+    "pdf-parse": "^2.4.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

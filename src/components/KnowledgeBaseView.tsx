@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ export default function KnowledgeBaseView({ folder }: Props) {
   const [loading, setLoading] = useState(true);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [mode, setMode] = useState<"view" | "edit" | "new">("view");
+  const [mode, setMode] = useState<"view" | "edit" | "new" | "upload">("view");
   const [newType, setNewType] = useState<EntryType>("note");
 
   // Edit / new form state
@@ -61,6 +61,15 @@ export default function KnowledgeBaseView({ folder }: Props) {
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+
+  // Upload
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadText, setUploadText] = useState("");
+  const [uploadTitle, setUploadTitle] = useState("");
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -177,6 +186,79 @@ export default function KnowledgeBaseView({ folder }: Props) {
     setDeleting(null);
   };
 
+  // ── Upload ─────────────────────────────────────────────────────────────────
+
+  const openUpload = () => {
+    setUploadFile(null);
+    setUploadText("");
+    setUploadTitle("");
+    setUploadError(null);
+    setSelectedId(null);
+    setMode("upload" as EntryType & "upload");
+  };
+
+  const processFile = async (file: File) => {
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/kb/upload", { method: "POST", body: form });
+      const json = await res.json();
+      if (!res.ok) { setUploadError(json.error ?? "Upload failed"); return; }
+      setUploadFile(file);
+      setUploadText(json.text);
+      setUploadTitle(file.name.replace(/\.[^.]+$/, ""));
+    } catch {
+      setUploadError("Failed to process file");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) processFile(f);
+    e.target.value = "";
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer.files?.[0];
+    if (f) processFile(f);
+  };
+
+  const handleVectorizeUpload = async () => {
+    if (!uploadText.trim() || !uploadTitle.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/kb/entries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          folderId: folder.folderId,
+          folderName: folder.folderName,
+          title: uploadTitle,
+          type: "note",
+          content: uploadText,
+          question: "",
+          answer: "",
+        }),
+      });
+      const json = await res.json();
+      if (json.data) {
+        setEntries((prev) => [json.data, ...prev]);
+        setSelectedId(json.data.id);
+        setMode("view");
+        setUploadFile(null);
+        setUploadText("");
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // ── Search ─────────────────────────────────────────────────────────────────
 
   const handleSearch = async () => {
@@ -247,7 +329,7 @@ export default function KnowledgeBaseView({ folder }: Props) {
               </p>
             </div>
 
-            {/* New entry dropdown */}
+            {/* New entry buttons */}
             <div className="flex gap-1.5">
               <button
                 onClick={() => openNew("note")}
@@ -258,10 +340,17 @@ export default function KnowledgeBaseView({ folder }: Props) {
               </button>
               <button
                 onClick={() => openNew("qa")}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-hub-accent text-hub-sidebar text-xs font-semibold hover:bg-hub-accent-dark transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-hub-bg border border-hub-border text-hub-muted text-xs hover:text-hub-text hover:border-hub-text transition-colors"
               >
                 <QAIcon />
                 Q&amp;A
+              </button>
+              <button
+                onClick={openUpload}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-hub-accent text-hub-sidebar text-xs font-semibold hover:bg-hub-accent-dark transition-colors"
+              >
+                <UploadIcon />
+                Upload
               </button>
             </div>
           </div>
@@ -385,10 +474,158 @@ export default function KnowledgeBaseView({ folder }: Props) {
         </div>
       </div>
 
-      {/* ── RIGHT — Detail / Editor ───────────────────────────────── */}
-      {(mode === "new" || (selectedId && mode !== "view") || (selectedId && mode === "view")) ? (
+      {/* ── RIGHT — Detail / Editor / Upload ─────────────────────── */}
+      {(mode === "upload" || mode === "new" || (selectedId && mode !== "view") || (selectedId && mode === "view")) ? (
         <div className="flex-1 flex flex-col overflow-hidden">
-          {mode === "view" && selected ? (
+          {mode === "upload" ? (
+            <div className="flex flex-col h-full overflow-y-auto">
+              {/* Upload top bar */}
+              <div className="px-6 py-4 border-b border-hub-border bg-hub-card flex items-center justify-between flex-shrink-0">
+                <h2 className="text-hub-text font-semibold text-sm">Upload Document</h2>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-hub-bg border border-hub-border text-hub-muted text-xs">
+                    <VectorIcon />
+                    <span>PDF · TXT · MD → Pinecone</span>
+                  </div>
+                  <button
+                    onClick={() => { setMode("view"); setUploadFile(null); setUploadText(""); }}
+                    className="px-3 py-1.5 rounded-lg border border-hub-border text-hub-muted text-xs hover:text-hub-text transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  {uploadText && (
+                    <button
+                      onClick={handleVectorizeUpload}
+                      disabled={!uploadTitle.trim() || saving}
+                      className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-hub-accent text-hub-sidebar text-xs font-semibold disabled:opacity-40 hover:bg-hub-accent-dark transition-colors"
+                    >
+                      {saving ? (
+                        <>
+                          <span className="w-3 h-3 border-2 border-hub-sidebar/30 border-t-hub-sidebar rounded-full animate-spin" />
+                          Vectorizing...
+                        </>
+                      ) : (
+                        <>
+                          <VectorIcon />
+                          Save &amp; Vectorize
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex-1 p-6 max-w-3xl space-y-5">
+                {/* Drop zone */}
+                {!uploadFile && !uploading && (
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`flex flex-col items-center justify-center gap-3 border-2 border-dashed rounded-2xl p-12 cursor-pointer transition-all ${
+                      dragOver
+                        ? "border-hub-accent bg-hub-accent/5"
+                        : "border-hub-border hover:border-hub-accent/50 hover:bg-hub-bg"
+                    }`}
+                  >
+                    <span className="text-hub-muted opacity-50"><UploadCloudIcon /></span>
+                    <div className="text-center">
+                      <p className="text-hub-text text-sm font-medium">Drop a file here or click to browse</p>
+                      <p className="text-hub-muted text-xs mt-1">Supports PDF, TXT, MD — max 10 MB</p>
+                    </div>
+                    <p className="text-hub-muted text-[10px]">
+                      Text will be extracted, chunked, and vectorized into the{" "}
+                      <span className="text-hub-accent font-semibold">{folder.folderName}</span> namespace in Pinecone
+                    </p>
+                  </div>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.txt,.md"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+
+                {uploading && (
+                  <div className="flex items-center justify-center gap-3 py-12 text-hub-muted text-sm">
+                    <span className="w-5 h-5 border-2 border-hub-accent/30 border-t-hub-accent rounded-full animate-spin" />
+                    Extracting text...
+                  </div>
+                )}
+
+                {uploadError && (
+                  <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+                    {uploadError}
+                  </div>
+                )}
+
+                {uploadFile && uploadText && (
+                  <>
+                    {/* File info */}
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-hub-bg border border-hub-border">
+                      <span className="text-hub-accent"><DocIcon /></span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-hub-text text-xs font-semibold truncate">{uploadFile.name}</p>
+                        <p className="text-hub-muted text-[10px]">
+                          {(uploadFile.size / 1024).toFixed(1)} KB · {uploadText.length.toLocaleString()} chars · ~{Math.ceil(uploadText.length / 1400)} Pinecone chunks
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => { setUploadFile(null); setUploadText(""); setUploadTitle(""); }}
+                        className="text-hub-muted hover:text-red-500 text-xs px-2 py-1 rounded transition-colors"
+                      >
+                        ×
+                      </button>
+                    </div>
+
+                    {/* Editable title */}
+                    <div>
+                      <label className="text-hub-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                        Entry Title
+                      </label>
+                      <input
+                        value={uploadTitle}
+                        onChange={(e) => setUploadTitle(e.target.value)}
+                        className="w-full bg-hub-bg border border-hub-border rounded-xl px-4 py-2.5 text-hub-text text-sm placeholder-hub-muted focus:outline-none focus:border-hub-accent"
+                        placeholder="Title for this document..."
+                      />
+                    </div>
+
+                    {/* Extracted text preview */}
+                    <div>
+                      <label className="text-hub-muted text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                        Extracted Text Preview
+                      </label>
+                      <textarea
+                        value={uploadText}
+                        onChange={(e) => setUploadText(e.target.value)}
+                        rows={12}
+                        className="w-full bg-hub-bg border border-hub-border rounded-xl px-4 py-3 text-hub-text text-xs placeholder-hub-muted focus:outline-none focus:border-hub-accent resize-none leading-relaxed font-mono"
+                      />
+                      <p className="text-hub-muted text-[10px] mt-1">You can edit the text before vectorizing</p>
+                    </div>
+                  </>
+                )}
+
+                {/* Pinecone namespace info */}
+                <div className="flex items-start gap-3 p-4 rounded-xl bg-hub-bg border border-hub-border">
+                  <span className="text-hub-accent mt-0.5 flex-shrink-0"><InfoIcon /></span>
+                  <div className="text-xs text-hub-muted space-y-0.5">
+                    <p className="font-semibold text-hub-text">Folder → Pinecone namespace</p>
+                    <p>
+                      This document will be vectorized into the{" "}
+                      <span className="font-mono text-hub-text">{folder.folderId}</span> namespace
+                      in Pinecone, keeping it isolated from other folders.
+                    </p>
+                    <p className="mt-1">The AI agent queries only the relevant folder&apos;s namespace when answering questions about that topic area.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : mode === "view" && selected ? (
             <ViewPanel
               entry={selected}
               onEdit={() => openEdit(selected)}
@@ -844,6 +1081,24 @@ function EmptyPanelIcon() {
     <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  );
+}
+
+function UploadIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+    </svg>
+  );
+}
+
+function UploadCloudIcon() {
+  return (
+    <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
     </svg>
   );
 }
