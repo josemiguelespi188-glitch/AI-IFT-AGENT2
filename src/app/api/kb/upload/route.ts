@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require("pdf-parse");
 
 /**
  * POST /api/kb/upload
@@ -31,6 +29,10 @@ export async function POST(req: NextRequest) {
     let text = "";
 
     if (ext === "pdf") {
+      // Use the internal pdf-parse module to avoid the test-file loader
+      // that runs at import time and crashes in Next.js server environments.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const pdfParse = require("pdf-parse/lib/pdf-parse");
       const buffer = Buffer.from(await file.arrayBuffer());
       const parsed = await pdfParse(buffer);
       text = parsed.text ?? "";

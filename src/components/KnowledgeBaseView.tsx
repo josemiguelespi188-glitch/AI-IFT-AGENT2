@@ -308,7 +308,7 @@ export default function KnowledgeBaseView({ folder }: Props) {
       {/* ── LEFT — Entry list ─────────────────────────────────────── */}
       <div
         className={`flex flex-col border-r border-hub-border transition-all ${
-          mode !== "view" || selectedId ? "w-80 flex-shrink-0" : "flex-1 max-w-lg"
+          (mode !== "view" && mode !== "upload") || selectedId ? "w-80 flex-shrink-0" : "flex-1 max-w-lg"
         }`}
       >
         {/* Header */}
@@ -321,7 +321,7 @@ export default function KnowledgeBaseView({ folder }: Props) {
 
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-hub-text font-bold text-base">
+              <h1 className="text-hub-text font-bold text-base truncate max-w-[180px]">
                 {folder.folderName}
               </h1>
               <p className="text-hub-muted text-xs mt-0.5">
