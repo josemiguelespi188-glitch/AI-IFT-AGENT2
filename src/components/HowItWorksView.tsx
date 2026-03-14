@@ -273,12 +273,24 @@ export default function HowItWorksView() {
 // ── Workflow Diagram ───────────────────────────────────────────────────────────
 
 function WorkflowDiagram() {
+  const agents = [
+    { x: 80,  label: "A1", name: "Investor\nIdentity",   fill: "#eff6ff", stroke: "#93c5fd", text: "#1d4ed8" },
+    { x: 230, label: "A2", name: "Client\n& Fund",       fill: "#eef2ff", stroke: "#a5b4fc", text: "#4338ca" },
+    { x: 380, label: "A3", name: "FAQ &\nCases",         fill: "#f5f3ff", stroke: "#c4b5fd", text: "#6d28d9" },
+    { x: 530, label: "A4", name: "Knowledge\nRetrieval", fill: "#ecfeff", stroke: "#67e8f9", text: "#0e7490" },
+    { x: 680, label: "A5", name: "Response\nPolicy",     fill: "#f0fdfa", stroke: "#6ee7b7", text: "#065f46" },
+    { x: 830, label: "A6", name: "Channel\nFormat",      fill: "#f0fdf4", stroke: "#86efac", text: "#166534" },
+  ];
+  // Gap centers between adjacent agent boxes (each box is center ± 60)
+  // Gaps: [140,170], [290,320], [440,470], [590,620], [740,770] → centers:
+  const meshGapCenters = [155, 305, 455, 605, 755];
+
   return (
     <div className="rounded-xl border border-hub-border bg-hub-bg/60 p-4">
       <p className="text-hub-muted text-[10px] font-semibold uppercase tracking-wider mb-3">Architecture Diagram</p>
       <div className="overflow-x-auto">
         <svg
-          viewBox="0 0 920 480"
+          viewBox="0 0 920 600"
           width="100%"
           style={{ minWidth: 640, display: "block" }}
           xmlns="http://www.w3.org/2000/svg"
@@ -297,57 +309,19 @@ function WorkflowDiagram() {
             <marker id="arr-purple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
               <path d="M0,0 L0,6 L8,3 z" fill="#a855f7" />
             </marker>
+            <marker id="arr-teal" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#14b8a6" />
+            </marker>
+            {/* Bidirectional markers for agent peer mesh */}
+            <marker id="arr-mesh-s" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto-start-reverse">
+              <path d="M0,0 L0,6 L8,3 z" fill="#94a3b8" opacity="0.65" />
+            </marker>
+            <marker id="arr-mesh-e" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#94a3b8" opacity="0.65" />
+            </marker>
           </defs>
 
-          {/* ── Inputs → Master (merge at x=270, then to Master left) ── */}
-          {/* Zendesk straight to Master */}
-          <line x1="180" y1="68" x2="430" y2="68" stroke="#94a3b8" strokeWidth="1.5" markerEnd="url(#arr-neutral)" />
-          {/* Email up to y=68 via merge point */}
-          <line x1="180" y1="108" x2="270" y2="108" stroke="#94a3b8" strokeWidth="1.5" />
-          <line x1="270" y1="108" x2="270" y2="72" stroke="#94a3b8" strokeWidth="1.5" />
-          <line x1="270" y1="72" x2="430" y2="72" stroke="#94a3b8" strokeWidth="1.5" markerEnd="url(#arr-neutral)" />
-          {/* AxisKey */}
-          <line x1="180" y1="148" x2="262" y2="148" stroke="#94a3b8" strokeWidth="1.5" />
-          <line x1="262" y1="148" x2="262" y2="76" stroke="#94a3b8" strokeWidth="1.5" />
-          <line x1="262" y1="76" x2="430" y2="76" stroke="#94a3b8" strokeWidth="1.5" markerEnd="url(#arr-neutral)" />
-
-          {/* ── Master → Agents: vertical stem + horizontal bus + drops ── */}
-          {/* Stem down from Master bottom-center */}
-          <line x1="530" y1="94" x2="530" y2="158" stroke="#94a3b8" strokeWidth="2" />
-          {/* Horizontal distribution bus */}
-          <line x1="80" y1="158" x2="830" y2="158" stroke="#94a3b8" strokeWidth="2" />
-          {/* Bus label */}
-          <text x="530" y="152" textAnchor="middle" fontSize="7" fill="#94a3b8" fontWeight="600">Dispatch in parallel</text>
-          {/* Vertical drops from bus to each agent top */}
-          {[80, 230, 380, 530, 680, 830].map((x) => (
-            <line key={x} x1={x} y1="158" x2={x} y2="213" stroke="#64748b" strokeWidth="1.5" markerEnd="url(#arr-neutral)" />
-          ))}
-
-          {/* Agents → Confidence: converge lines from each agent bottom */}
-          {[80, 230, 380, 530, 680, 830].map((x) => (
-            <line key={x} x1={x} y1="272" x2="530" y2="298" stroke="#64748b" strokeWidth="1" strokeDasharray="3 2" markerEnd="url(#arr-neutral)" />
-          ))}
-
-          {/* Confidence → Auto-send */}
-          <line x1="430" y1="336" x2="225" y2="336" stroke="#22c55e" strokeWidth="1.5" />
-          <line x1="225" y1="336" x2="225" y2="362" stroke="#22c55e" strokeWidth="1.5" markerEnd="url(#arr-green)" />
-
-          {/* Confidence → Review Queue */}
-          <line x1="630" y1="336" x2="775" y2="336" stroke="#f59e0b" strokeWidth="1.5" />
-          <line x1="775" y1="336" x2="775" y2="362" stroke="#f59e0b" strokeWidth="1.5" markerEnd="url(#arr-amber)" />
-
-          {/* Review Queue → Learning Loop */}
-          <line x1="775" y1="418" x2="775" y2="438" stroke="#a855f7" strokeWidth="1.5" />
-          <line x1="775" y1="438" x2="530" y2="438" stroke="#a855f7" strokeWidth="1.5" markerEnd="url(#arr-purple)" />
-
-          {/* Learning Loop feedback */}
-          <line x1="430" y1="418" x2="40" y2="418" stroke="#a855f7" strokeWidth="1.5" strokeDasharray="5 3" />
-          <line x1="40" y1="418" x2="40" y2="230" stroke="#a855f7" strokeWidth="1.5" strokeDasharray="5 3" />
-          <line x1="40" y1="230" x2="100" y2="230" stroke="#a855f7" strokeWidth="1.5" strokeDasharray="5 3" markerEnd="url(#arr-purple)" />
-
-          <line x1="530" y1="460" x2="530" y2="470" stroke="#94a3b8" strokeWidth="1" />
-
-          {/* Input nodes */}
+          {/* ── Input nodes ── */}
           <rect x="20" y="50" width="160" height="36" rx="8" fill="#f0fdf4" stroke="#86efac" strokeWidth="1.5" />
           <text x="100" y="64" textAnchor="middle" fontSize="9" fontWeight="700" fill="#166534">Zendesk</text>
           <text x="100" y="78" textAnchor="middle" fontSize="8" fill="#4ade80">Support tickets</text>
@@ -360,21 +334,44 @@ function WorkflowDiagram() {
           <text x="100" y="144" textAnchor="middle" fontSize="9" fontWeight="700" fill="#3730a3">AxisKey</text>
           <text x="100" y="158" textAnchor="middle" fontSize="8" fill="#818cf8">Portal inquiry</text>
 
-          {/* Master AI Agent */}
+          {/* ── Inputs → Master ── */}
+          <line x1="180" y1="68" x2="430" y2="68" stroke="#94a3b8" strokeWidth="1.5" markerEnd="url(#arr-neutral)" />
+          <line x1="180" y1="108" x2="270" y2="108" stroke="#94a3b8" strokeWidth="1.5" />
+          <line x1="270" y1="108" x2="270" y2="72" stroke="#94a3b8" strokeWidth="1.5" />
+          <line x1="270" y1="72" x2="430" y2="72" stroke="#94a3b8" strokeWidth="1.5" markerEnd="url(#arr-neutral)" />
+          <line x1="180" y1="148" x2="262" y2="148" stroke="#94a3b8" strokeWidth="1.5" />
+          <line x1="262" y1="148" x2="262" y2="76" stroke="#94a3b8" strokeWidth="1.5" />
+          <line x1="262" y1="76" x2="430" y2="76" stroke="#94a3b8" strokeWidth="1.5" markerEnd="url(#arr-neutral)" />
+
+          {/* ── Master AI Agent ── */}
           <rect x="430" y="42" width="200" height="52" rx="10" fill="#ecfccb" stroke="#a3e635" strokeWidth="2" />
           <text x="530" y="62" textAnchor="middle" fontSize="10" fontWeight="800" fill="#365314">Master AI Agent</text>
           <text x="530" y="76" textAnchor="middle" fontSize="8" fill="#4d7c0f">n8n Orchestration Engine</text>
           <text x="530" y="88" textAnchor="middle" fontSize="7.5" fill="#84cc16">Classifies · Extracts · Delegates</text>
 
-          {/* Specialist Agents — centered at x=80,230,380,530,680,830 */}
-          {[
-            { x: 80,  label: "A1", name: "Investor\nIdentity",  fill: "#eff6ff", stroke: "#93c5fd", text: "#1d4ed8" },
-            { x: 230, label: "A2", name: "Client\n& Fund",      fill: "#eef2ff", stroke: "#a5b4fc", text: "#4338ca" },
-            { x: 380, label: "A3", name: "FAQ &\nCases",        fill: "#f5f3ff", stroke: "#c4b5fd", text: "#6d28d9" },
-            { x: 530, label: "A4", name: "Knowledge\nRetrieval",fill: "#ecfeff", stroke: "#67e8f9", text: "#0e7490" },
-            { x: 680, label: "A5", name: "Response\nPolicy",    fill: "#f0fdfa", stroke: "#6ee7b7", text: "#065f46" },
-            { x: 830, label: "A6", name: "Channel\nFormat",     fill: "#f0fdf4", stroke: "#86efac", text: "#166534" },
-          ].map(({ x, label, name, fill, stroke, text }) => {
+          {/* ── Master → Distribution bus → Agents ── */}
+          <line x1="530" y1="94" x2="530" y2="158" stroke="#94a3b8" strokeWidth="2" />
+          <line x1="80" y1="158" x2="830" y2="158" stroke="#94a3b8" strokeWidth="2" />
+          <text x="530" y="152" textAnchor="middle" fontSize="7" fill="#94a3b8" fontWeight="600">Dispatch in parallel</text>
+          {[80, 230, 380, 530, 680, 830].map((x) => (
+            <line key={x} x1={x} y1="158" x2={x} y2="213" stroke="#64748b" strokeWidth="1.5" markerEnd="url(#arr-neutral)" />
+          ))}
+
+          {/* ── Agent-to-agent bidirectional peer mesh ── */}
+          {meshGapCenters.map((gx) => (
+            <line
+              key={gx}
+              x1={gx - 15} y1="242"
+              x2={gx + 15} y2="242"
+              stroke="#94a3b8" strokeWidth="1.5"
+              markerStart="url(#arr-mesh-s)"
+              markerEnd="url(#arr-mesh-e)"
+            />
+          ))}
+          <text x="460" y="282" textAnchor="middle" fontSize="6.5" fill="#94a3b8" fontStyle="italic">agents share context bidirectionally</text>
+
+          {/* ── Specialist Agents — centered at x=80,230,380,530,680,830 ── */}
+          {agents.map(({ x, label, name, fill, stroke, text }) => {
             const lines = name.split("\n");
             return (
               <g key={label}>
@@ -386,35 +383,76 @@ function WorkflowDiagram() {
             );
           })}
 
-          {/* Confidence & Decision Layer */}
+          {/* ── Agents → Confidence ── */}
+          {[80, 230, 380, 530, 680, 830].map((x) => (
+            <line key={x} x1={x} y1="272" x2="530" y2="298" stroke="#64748b" strokeWidth="1" strokeDasharray="3 2" markerEnd="url(#arr-neutral)" />
+          ))}
+
+          {/* ── Confidence & Decision Layer ── */}
           <rect x="380" y="300" width="300" height="36" rx="8" fill="#fef3c7" stroke="#fcd34d" strokeWidth="1.5" />
           <text x="530" y="316" textAnchor="middle" fontSize="9.5" fontWeight="800" fill="#92400e">Confidence & Decision Layer</text>
           <text x="530" y="329" textAnchor="middle" fontSize="7.5" fill="#b45309">70% threshold · 4 criteria evaluated</text>
 
-          {/* Auto-send */}
+          {/* ── Confidence → Auto-send (left) ── */}
+          <line x1="430" y1="336" x2="225" y2="336" stroke="#22c55e" strokeWidth="1.5" />
+          <line x1="225" y1="336" x2="225" y2="362" stroke="#22c55e" strokeWidth="1.5" markerEnd="url(#arr-green)" />
+
+          {/* ── Confidence → Review Queue (right) ── */}
+          <line x1="630" y1="336" x2="775" y2="336" stroke="#f59e0b" strokeWidth="1.5" />
+          <line x1="775" y1="336" x2="775" y2="362" stroke="#f59e0b" strokeWidth="1.5" markerEnd="url(#arr-amber)" />
+
+          {/* ── Auto-Send node ── */}
           <rect x="115" y="362" width="220" height="56" rx="8" fill="#f0fdf4" stroke="#86efac" strokeWidth="1.5" />
           <text x="225" y="381" textAnchor="middle" fontSize="9.5" fontWeight="800" fill="#166534">Auto-Send</text>
           <text x="225" y="394" textAnchor="middle" fontSize="8" fill="#16a34a">≥ 70% confidence</text>
           <text x="225" y="407" textAnchor="middle" fontSize="7.5" fill="#4ade80">Response sent via n8n</text>
 
-          {/* Human Review Queue */}
+          {/* ── Human Review Queue node ── */}
           <rect x="665" y="362" width="220" height="56" rx="8" fill="#fefce8" stroke="#fde047" strokeWidth="1.5" />
           <text x="775" y="381" textAnchor="middle" fontSize="9.5" fontWeight="800" fill="#854d0e">Human Review Queue</text>
           <text x="775" y="394" textAnchor="middle" fontSize="8" fill="#ca8a04">&lt; 70% confidence</text>
           <text x="775" y="407" textAnchor="middle" fontSize="7.5" fill="#facc15">Operator reviews AI draft</text>
 
-          {/* Learning Loop */}
-          <rect x="430" y="418" width="200" height="36" rx="8" fill="#faf5ff" stroke="#d8b4fe" strokeWidth="1.5" />
-          <text x="530" y="434" textAnchor="middle" fontSize="9.5" fontWeight="800" fill="#6b21a8">Learning Loop</text>
-          <text x="530" y="447" textAnchor="middle" fontSize="7.5" fill="#a855f7">Patterns extracted · KB updated</text>
+          {/* ── Both paths converge into Learning Loop (y=430, midpoint y=448) ── */}
+          {/* Auto-send → Learning Loop (enter left edge at midpoint) */}
+          <line x1="225" y1="418" x2="225" y2="448" stroke="#22c55e" strokeWidth="1.5" />
+          <line x1="225" y1="448" x2="430" y2="448" stroke="#22c55e" strokeWidth="1.5" markerEnd="url(#arr-green)" />
+          {/* Review Queue → Learning Loop (enter right edge at midpoint) */}
+          <line x1="775" y1="418" x2="775" y2="448" stroke="#f59e0b" strokeWidth="1.5" />
+          <line x1="775" y1="448" x2="630" y2="448" stroke="#f59e0b" strokeWidth="1.5" markerEnd="url(#arr-amber)" />
 
-          {/* Platform Logging */}
-          <rect x="20" y="460" width="880" height="16" rx="4" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="1" />
-          <text x="460" y="472" textAnchor="middle" fontSize="7.5" fill="#64748b" fontWeight="600">
+          {/* ── Learning Loop ── */}
+          <rect x="430" y="430" width="200" height="36" rx="8" fill="#faf5ff" stroke="#d8b4fe" strokeWidth="1.5" />
+          <text x="530" y="446" textAnchor="middle" fontSize="9.5" fontWeight="800" fill="#6b21a8">Learning Loop</text>
+          <text x="530" y="459" textAnchor="middle" fontSize="7.5" fill="#a855f7">Patterns extracted · KB updated</text>
+
+          {/* ── Learning Loop feedback (purple dashed, left side → back to agents) ── */}
+          <line x1="430" y1="462" x2="40" y2="462" stroke="#a855f7" strokeWidth="1.5" strokeDasharray="5 3" />
+          <line x1="40" y1="462" x2="40" y2="230" stroke="#a855f7" strokeWidth="1.5" strokeDasharray="5 3" />
+          <line x1="40" y1="230" x2="100" y2="230" stroke="#a855f7" strokeWidth="1.5" strokeDasharray="5 3" markerEnd="url(#arr-purple)" />
+          <text x="36" y="346" textAnchor="middle" fontSize="7.5" fill="#a855f7" fontWeight="600" transform="rotate(-90 36 346)">Feedback loop</text>
+
+          {/* ── Learning Loop → A6 Channel Format ── */}
+          <line x1="530" y1="466" x2="530" y2="482" stroke="#14b8a6" strokeWidth="2" markerEnd="url(#arr-teal)" />
+
+          {/* ── A6 · Channel Format Agent (dedicated final formatting node) ── */}
+          <rect x="360" y="482" width="340" height="40" rx="8" fill="#f0fdfa" stroke="#5eead4" strokeWidth="2" />
+          <text x="530" y="499" textAnchor="middle" fontSize="10" fontWeight="800" fill="#0f766e">A6 · Channel Format Agent</text>
+          <text x="530" y="514" textAnchor="middle" fontSize="7.5" fill="#14b8a6">Converts answer into correct channel format</text>
+
+          {/* ── Channel Format → Return to Source ── */}
+          <line x1="530" y1="522" x2="530" y2="536" stroke="#14b8a6" strokeWidth="2" markerEnd="url(#arr-teal)" />
+
+          {/* ── Return to Source channel banner ── */}
+          <rect x="150" y="536" width="720" height="34" rx="8" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1.5" />
+          <text x="510" y="551" textAnchor="middle" fontSize="9.5" fontWeight="800" fill="#1e293b">Returns to source channel</text>
+          <text x="510" y="563" textAnchor="middle" fontSize="8" fill="#64748b">Zendesk reply  ·  Email response  ·  AxisKey portal message</text>
+
+          {/* ── Platform Logging banner ── */}
+          <rect x="20" y="582" width="880" height="16" rx="4" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="1" />
+          <text x="460" y="594" textAnchor="middle" fontSize="7.5" fill="#64748b" fontWeight="600">
             Platform Logging — every inquiry · always · source · investor · fund · confidence score · outcome
           </text>
-
-          <text x="40" y="340" textAnchor="middle" fontSize="7.5" fill="#a855f7" fontWeight="600" transform="rotate(-90 40 340)">Feedback loop</text>
         </svg>
       </div>
     </div>
