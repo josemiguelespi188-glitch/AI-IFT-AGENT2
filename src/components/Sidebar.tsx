@@ -89,14 +89,20 @@ CREATE POLICY "allow_all_service_role" ON kb_folders
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: folderId }),
     });
-    setFolders((prev) => prev.filter((f) => f.id !== folderId && f.parentId !== folderId));
-    if (activeKBFolder?.folderId === folderId) setActiveKBFolder(null);
+    // Recursively collect all descendant IDs to remove from local state
+    const toDelete = new Set<string>();
+    const collect = (id: string) => {
+      toDelete.add(id);
+      folders.filter((f) => f.parentId === id).forEach((f) => collect(f.id));
+    };
+    collect(folderId);
+    setFolders((prev) => prev.filter((f) => !toDelete.has(f.id)));
+    if (activeKBFolder && toDelete.has(activeKBFolder.folderId)) setActiveKBFolder(null);
   };
 
   const rootFolders = folders.filter((f) => !f.parentId);
-  const subFolders = (parentId: string) => folders.filter((f) => f.parentId === parentId);
-  const toggleFolder = (id: string) =>
-    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleFolder = (id: string, forceTo?: boolean) =>
+    setExpanded((prev) => ({ ...prev, [id]: forceTo !== undefined ? forceTo : !prev[id] }));
 
   const nav = (v: ActiveView) => {
     setActiveView(v);
@@ -228,117 +234,25 @@ CREATE POLICY "allow_all_service_role" ON kb_folders
           </div>
         )}
 
-        {/* Root folders */}
-        {rootFolders.map((folder) => {
-          const isExpanded = !!expanded[folder.id];
-          const children = subFolders(folder.id);
-          const isActive = activeKBFolder?.folderId === folder.id;
-
-          return (
-            <div key={folder.id} className="mb-0.5 group/folder">
-              {/* Folder row */}
-              <div className="flex items-center">
-                <button
-                  onClick={() => {
-                    if (children.length > 0) toggleFolder(folder.id);
-                    openFolder(folder);
-                  }}
-                  className={`flex-1 flex items-center gap-2 px-2 py-2 rounded-lg text-sm transition-colors ${
-                    isActive
-                      ? "bg-hub-sidebar-active text-hub-sidebar-active-text"
-                      : "text-hub-sidebar-text hover:bg-hub-sidebar-hover"
-                  }`}
-                >
-                  {children.length > 0 ? (
-                    <span
-                      className="text-hub-sidebar-muted text-[10px] transition-transform duration-150 flex-shrink-0"
-                      style={{ display: "inline-block", transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}
-                      onClick={(e) => { e.stopPropagation(); toggleFolder(folder.id); }}
-                    >
-                      ▶
-                    </span>
-                  ) : (
-                    <FolderIcon />
-                  )}
-                  <span className="flex-1 text-left font-medium text-hub-sidebar-text/80 text-sm truncate">
-                    {folder.name}
-                  </span>
-                  {folder.entry_count > 0 && (
-                    <span className="text-[10px] bg-black/30 text-hub-sidebar-muted rounded px-1.5 py-0.5 flex-shrink-0">
-                      {folder.entry_count}
-                    </span>
-                  )}
-                </button>
-                {/* Add subfolder button */}
-                <button
-                  onClick={() => { setNewFolderParentId(folder.id); setNewFolderName(""); setExpanded((p) => ({ ...p, [folder.id]: true })); }}
-                  className="opacity-0 group-hover/folder:opacity-100 p-1 rounded text-hub-sidebar-muted hover:text-hub-accent transition-all"
-                  title="Add subfolder"
-                >
-                  <PlusIcon />
-                </button>
-                <button
-                  onClick={() => handleDeleteFolder(folder.id)}
-                  className="opacity-0 group-hover/folder:opacity-100 p-1 mr-1 rounded text-hub-sidebar-muted hover:text-red-400 transition-all"
-                >
-                  <XSmallIcon />
-                </button>
-              </div>
-
-              {/* Subfolders */}
-              {isExpanded && (
-                <div className="ml-4 mt-0.5 space-y-0.5">
-                  {children.map((sub) => {
-                    const subActive = activeKBFolder?.folderId === sub.id;
-                    return (
-                      <div key={sub.id} className="flex items-center group/sub">
-                        <button
-                          onClick={() => openFolder(sub)}
-                          className={`flex-1 flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-colors ${
-                            subActive
-                              ? "bg-hub-sidebar-hover text-hub-sidebar-text font-medium"
-                              : "text-hub-sidebar-muted hover:bg-hub-sidebar-hover hover:text-hub-sidebar-text"
-                          }`}
-                        >
-                          <FolderIcon />
-                          <span className="flex-1 text-left truncate">{sub.name}</span>
-                          {sub.entry_count > 0 && (
-                            <span className="text-[10px] bg-black/30 text-hub-sidebar-muted rounded px-1.5 py-0.5 flex-shrink-0">
-                              {sub.entry_count}
-                            </span>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteFolder(sub.id)}
-                          className="opacity-0 group-hover/sub:opacity-100 p-1 mr-1 rounded text-hub-sidebar-muted hover:text-red-400 transition-all"
-                        >
-                          <XSmallIcon />
-                        </button>
-                      </div>
-                    );
-                  })}
-
-                  {/* Inline new subfolder */}
-                  {newFolderParentId === folder.id && (
-                    <div className="px-3 py-1">
-                      <input
-                        autoFocus
-                        value={newFolderName}
-                        onChange={(e) => setNewFolderName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleAddFolder(folder.id);
-                          if (e.key === "Escape") { setNewFolderParentId(null); setNewFolderName(""); }
-                        }}
-                        placeholder="Subfolder name..."
-                        className="w-full bg-hub-sidebar-hover border border-hub-sidebar-border rounded px-2 py-1 text-xs text-hub-sidebar-text placeholder-hub-sidebar-muted focus:outline-none focus:border-hub-accent"
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {/* Recursive folder tree */}
+        {rootFolders.map((folder) => (
+          <FolderNode
+            key={folder.id}
+            folder={folder}
+            allFolders={folders}
+            depth={0}
+            expanded={expanded}
+            toggleExpand={toggleFolder}
+            newFolderParentId={newFolderParentId}
+            newFolderName={newFolderName}
+            setNewFolderParentId={setNewFolderParentId}
+            setNewFolderName={setNewFolderName}
+            activeKBFolder={activeKBFolder}
+            openFolder={openFolder}
+            handleAddFolder={handleAddFolder}
+            handleDeleteFolder={handleDeleteFolder}
+          />
+        ))}
 
         {/* Inline new root folder */}
         {newFolderParentId === "root" && (
@@ -368,6 +282,141 @@ CREATE POLICY "allow_all_service_role" ON kb_folders
         />
       </div>
     </aside>
+  );
+}
+
+// ── FolderNode (recursive) ────────────────────────────────────────────────────
+
+function FolderNode({
+  folder,
+  allFolders,
+  depth,
+  expanded,
+  toggleExpand,
+  newFolderParentId,
+  newFolderName,
+  setNewFolderParentId,
+  setNewFolderName,
+  activeKBFolder,
+  openFolder,
+  handleAddFolder,
+  handleDeleteFolder,
+}: {
+  folder: KBFolder;
+  allFolders: KBFolder[];
+  depth: number;
+  expanded: Record<string, boolean>;
+  toggleExpand: (id: string, forceTo?: boolean) => void;
+  newFolderParentId: string | null | "root";
+  newFolderName: string;
+  setNewFolderParentId: (id: string | null) => void;
+  setNewFolderName: (name: string) => void;
+  activeKBFolder: { folderId: string; folderName: string } | null;
+  openFolder: (f: KBFolder) => void;
+  handleAddFolder: (parentId?: string) => void;
+  handleDeleteFolder: (id: string) => void;
+}) {
+  const children = allFolders.filter((f) => f.parentId === folder.id);
+  const isExpanded = !!expanded[folder.id];
+  const isActive = activeKBFolder?.folderId === folder.id;
+  const indent = depth * 12;
+
+  const sharedNodeProps = {
+    allFolders,
+    expanded,
+    toggleExpand,
+    newFolderParentId,
+    newFolderName,
+    setNewFolderParentId,
+    setNewFolderName,
+    activeKBFolder,
+    openFolder,
+    handleAddFolder,
+    handleDeleteFolder,
+  };
+
+  return (
+    <div className="group/fnode mb-0.5">
+      {/* Row */}
+      <div className="flex items-center" style={{ paddingLeft: indent }}>
+        <button
+          onClick={() => {
+            if (children.length > 0) toggleExpand(folder.id);
+            openFolder(folder);
+          }}
+          className={`flex-1 flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors min-w-0 ${
+            isActive
+              ? "bg-hub-sidebar-active text-hub-sidebar-active-text"
+              : "text-hub-sidebar-text hover:bg-hub-sidebar-hover"
+          }`}
+        >
+          {children.length > 0 ? (
+            <span
+              className="text-hub-sidebar-muted text-[9px] flex-shrink-0 transition-transform duration-150"
+              style={{ display: "inline-block", transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}
+              onClick={(e) => { e.stopPropagation(); toggleExpand(folder.id); }}
+            >
+              ▶
+            </span>
+          ) : (
+            <FolderIcon />
+          )}
+          <span className={`flex-1 text-left truncate ${
+            depth === 0 ? "font-medium text-hub-sidebar-text/80 text-sm" : "text-hub-sidebar-muted text-xs"
+          }`}>
+            {folder.name}
+          </span>
+          {folder.entry_count > 0 && (
+            <span className="text-[10px] bg-black/30 text-hub-sidebar-muted rounded px-1.5 py-0.5 flex-shrink-0">
+              {folder.entry_count}
+            </span>
+          )}
+        </button>
+
+        {/* Add child folder */}
+        <button
+          onClick={() => {
+            setNewFolderParentId(folder.id);
+            setNewFolderName("");
+            toggleExpand(folder.id, true);
+          }}
+          title="Add subfolder"
+          className="opacity-0 group-hover/fnode:opacity-100 p-1 rounded text-hub-sidebar-muted hover:text-hub-accent transition-all flex-shrink-0"
+        >
+          <PlusIcon />
+        </button>
+        <button
+          onClick={() => handleDeleteFolder(folder.id)}
+          className="opacity-0 group-hover/fnode:opacity-100 p-1 mr-1 rounded text-hub-sidebar-muted hover:text-red-400 transition-all flex-shrink-0"
+        >
+          <XSmallIcon />
+        </button>
+      </div>
+
+      {/* Children + inline input */}
+      {isExpanded && (
+        <div>
+          {children.map((child) => (
+            <FolderNode key={child.id} folder={child} depth={depth + 1} {...sharedNodeProps} />
+          ))}
+          {newFolderParentId === folder.id && (
+            <div style={{ paddingLeft: (depth + 1) * 12 + 8 }} className="py-1 pr-2">
+              <input
+                autoFocus
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleAddFolder(folder.id);
+                  if (e.key === "Escape") { setNewFolderParentId(null); setNewFolderName(""); }
+                }}
+                placeholder="Subfolder name..."
+                className="w-full bg-hub-sidebar-hover border border-hub-sidebar-border rounded px-2 py-1 text-xs text-hub-sidebar-text placeholder-hub-sidebar-muted focus:outline-none focus:border-hub-accent"
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
