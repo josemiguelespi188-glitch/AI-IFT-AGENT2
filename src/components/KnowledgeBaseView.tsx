@@ -485,7 +485,7 @@ export default function KnowledgeBaseView({ folder }: Props) {
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-hub-bg border border-hub-border text-hub-muted text-xs">
                     <VectorIcon />
-                    <span>PDF · TXT · MD → Pinecone</span>
+                    <span>PDF · XLSX · TXT · MD → Pinecone</span>
                   </div>
                   <button
                     onClick={() => { setMode("view"); setUploadFile(null); setUploadText(""); }}
@@ -532,7 +532,7 @@ export default function KnowledgeBaseView({ folder }: Props) {
                     <span className="text-hub-muted opacity-50"><UploadCloudIcon /></span>
                     <div className="text-center">
                       <p className="text-hub-text text-sm font-medium">Drop a file here or click to browse</p>
-                      <p className="text-hub-muted text-xs mt-1">Supports PDF, TXT, MD — max 10 MB</p>
+                      <p className="text-hub-muted text-xs mt-1">Supports PDF, XLSX, XLS, TXT, MD — max 10 MB</p>
                     </div>
                     <p className="text-hub-muted text-[10px]">
                       Text will be extracted, chunked, and vectorized into the{" "}
@@ -544,7 +544,7 @@ export default function KnowledgeBaseView({ folder }: Props) {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.txt,.md"
+                  accept=".pdf,.xlsx,.xls,.txt,.md"
                   className="hidden"
                   onChange={handleFileChange}
                 />
