@@ -20,6 +20,7 @@ interface KBEntry {
   chunkIds: string[];
   synced: boolean;
   chunk_count: number;
+  sync_error: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -61,6 +62,7 @@ export default function KnowledgeBaseView({ folder }: Props) {
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState<string | null>(null);
 
   // Upload
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -184,6 +186,25 @@ export default function KnowledgeBaseView({ folder }: Props) {
       setMode("view");
     }
     setDeleting(null);
+  };
+
+  // ── Retry Pinecone sync ────────────────────────────────────────────────────
+
+  const handleRetrySync = async (id: string) => {
+    setRetrying(id);
+    try {
+      const res = await fetch("/api/kb/entries", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const json = await res.json();
+      if (json.data) {
+        setEntries((prev) => prev.map((e) => (e.id === id ? json.data : e)));
+      }
+    } finally {
+      setRetrying(null);
+    }
   };
 
   // ── Upload ─────────────────────────────────────────────────────────────────
@@ -630,7 +651,9 @@ export default function KnowledgeBaseView({ folder }: Props) {
               entry={selected}
               onEdit={() => openEdit(selected)}
               onDelete={() => handleDelete(selected.id)}
+              onRetrySync={() => handleRetrySync(selected.id)}
               deleting={deleting === selected.id}
+              retrying={retrying === selected.id}
             />
           ) : (
             <EditorPanel
@@ -680,12 +703,16 @@ function ViewPanel({
   entry,
   onEdit,
   onDelete,
+  onRetrySync,
   deleting,
+  retrying,
 }: {
   entry: KBEntry;
   onEdit: () => void;
   onDelete: () => void;
+  onRetrySync: () => void;
   deleting: boolean;
+  retrying: boolean;
 }) {
   return (
     <div className="flex flex-col h-full overflow-y-auto">
@@ -745,15 +772,32 @@ function ViewPanel({
 
         {/* Pinecone info */}
         <div className="mt-6 p-4 rounded-xl bg-hub-bg border border-hub-border">
-          <div className="flex items-center gap-2 mb-2">
-            <VectorIcon />
-            <p className="text-hub-text text-xs font-semibold">Pinecone Vector Store</p>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <VectorIcon />
+              <p className="text-hub-text text-xs font-semibold">Pinecone Vector Store</p>
+            </div>
+            {!entry.synced && (
+              <button
+                onClick={onRetrySync}
+                disabled={retrying}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 text-[10px] font-semibold hover:bg-blue-100 transition-colors disabled:opacity-50"
+              >
+                {retrying ? "Syncing…" : "↺ Retry sync"}
+              </button>
+            )}
           </div>
           <div className="grid grid-cols-3 gap-3 text-xs">
             <Stat label="Chunks" value={entry.chunk_count.toString()} />
             <Stat label="Status" value={entry.synced ? "Synced" : "Not synced"} green={entry.synced} />
             <Stat label="Model" value="text-embedding-3-small" />
           </div>
+          {entry.sync_error && (
+            <div className="mt-2 p-2 rounded-lg bg-red-50 border border-red-200">
+              <p className="text-[10px] text-red-600 font-semibold mb-0.5">Sync error</p>
+              <p className="text-[10px] text-red-500 font-mono break-all">{entry.sync_error}</p>
+            </div>
+          )}
           {entry.chunkIds.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
               {entry.chunkIds.map((id, i) => (
