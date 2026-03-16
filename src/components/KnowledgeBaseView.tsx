@@ -742,6 +742,14 @@ function ViewPanel({
         </div>
       </div>
 
+      {/* Sync error banner */}
+      {entry.sync_error && (
+        <div className="px-6 py-2 bg-red-50 border-b border-red-200 flex items-start gap-2 flex-shrink-0">
+          <span className="text-red-600 font-semibold text-xs whitespace-nowrap">Sync error:</span>
+          <span className="text-red-500 font-mono text-xs break-all">{entry.sync_error}</span>
+        </div>
+      )}
+
       {/* Content */}
       <div className="flex-1 p-6 max-w-3xl">
         <h2 className="text-hub-text text-xl font-bold mb-4">{entry.title}</h2>
@@ -792,12 +800,7 @@ function ViewPanel({
             <Stat label="Status" value={entry.synced ? "Synced" : "Not synced"} green={entry.synced} />
             <Stat label="Model" value="text-embedding-3-small" />
           </div>
-          {entry.sync_error && (
-            <div className="mt-2 p-2 rounded-lg bg-red-50 border border-red-200">
-              <p className="text-[10px] text-red-600 font-semibold mb-0.5">Sync error</p>
-              <p className="text-[10px] text-red-500 font-mono break-all">{entry.sync_error}</p>
-            </div>
-          )}
+
           {entry.chunkIds.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
               {entry.chunkIds.map((id, i) => (
