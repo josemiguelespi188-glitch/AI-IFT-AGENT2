@@ -342,7 +342,7 @@ export default function KnowledgeBaseView({ folder }: Props) {
 
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-hub-text font-bold text-base truncate max-w-[180px]">
+              <h1 className="text-hub-text font-bold text-base truncate max-w-[120px]">
                 {folder.folderName}
               </h1>
               <p className="text-hub-muted text-xs mt-0.5">
@@ -351,7 +351,7 @@ export default function KnowledgeBaseView({ folder }: Props) {
             </div>
 
             {/* New entry buttons */}
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 flex-shrink-0">
               <button
                 onClick={() => openNew("note")}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-hub-bg border border-hub-border text-hub-muted text-xs hover:text-hub-text hover:border-hub-text transition-colors"
