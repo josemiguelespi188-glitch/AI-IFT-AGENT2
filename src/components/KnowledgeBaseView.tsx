@@ -215,7 +215,7 @@ export default function KnowledgeBaseView({ folder }: Props) {
     setUploadTitle("");
     setUploadError(null);
     setSelectedId(null);
-    setMode("upload" as EntryType & "upload");
+    setMode("upload");
   };
 
   const processFile = async (file: File) => {
@@ -329,7 +329,7 @@ export default function KnowledgeBaseView({ folder }: Props) {
       {/* ── LEFT — Entry list ─────────────────────────────────────── */}
       <div
         className={`flex flex-col border-r border-hub-border transition-all ${
-          (mode !== "view" && mode !== "upload") || selectedId ? "w-80 flex-shrink-0" : "flex-1 max-w-lg"
+          mode !== "view" || selectedId ? "w-80 flex-shrink-0" : "flex-1 max-w-lg"
         }`}
       >
         {/* Header */}
